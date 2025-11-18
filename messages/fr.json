@@ -1,0 +1,167 @@
+{
+  "auth": {
+    "welcome": "Bienvenue sur Ascent",
+    "subtitle": "Commencez votre parcours d'amélioration continue",
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "email": "Email",
+    "password": "Mot de passe",
+    "name": "Nom",
+    "createAccount": "Créer un compte",
+    "emailPlaceholder": "vous@exemple.com",
+    "passwordPlaceholder": "••••••••",
+    "namePlaceholder": "Jean Dupont",
+    "features": {
+      "title": "Transformez l'amélioration personnelle en une expérience mesurable et ludifiée.",
+      "description": "Suivez vos objectifs, développez des habitudes et faites évoluer votre vie avec un suivi de progression basé sur les XP.",
+      "setGoals": {
+        "title": "Définir des objectifs",
+        "description": "Créez des objectifs personnels dans le fitness, l'apprentissage et la productivité."
+      },
+      "earnXP": {
+        "title": "Gagner des XP",
+        "description": "Terminez des tâches et gagnez des points d'expérience pour suivre votre progression."
+      },
+      "trackStreaks": {
+        "title": "Suivre les séries",
+        "description": "Développez la cohérence avec des compteurs de séries et des graphiques de progression en temps réel."
+      },
+      "visualize": {
+        "title": "Visualiser",
+        "description": "Visualisez votre croissance avec de beaux graphiques et des retours dynamiques."
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bon retour, {name}",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "goals": "Objectifs & Habitudes",
+      "rewards": "Récompenses",
+      "analytics": "Analyses",
+      "profile": "Profil & Réglages"
+    },
+    "overview": {
+      "summary": {
+        "level": "Niveau actuel",
+        "xp": "XP actuels",
+        "tokens": "Jetons disponibles",
+        "next": "Prochaine étape"
+      },
+      "hero": {
+        "subtitle": "Vous êtes sur une série de {streak} jours. Continuez l'ascension !",
+        "cta": "Voir les jalons",
+        "tokens": "Jetons économisés",
+        "weeklyGain": "+{xp} XP cette semaine",
+        "placeholderTabs": "Modes à venir · Progression · Récompenses"
+      },
+      "streaks": {
+        "title": "Meilleures séries actives",
+        "subtitle": "Gardez votre élan",
+        "days": "Série de {count} jours",
+        "rank": "Top #{rank}"
+      },
+      "tasks": {
+        "title": "Focus du jour",
+        "subtitle": "Habitudes et objectifs prévus aujourd'hui",
+        "due": "Échéance",
+        "status": {
+          "scheduled": "Prévu",
+          "overdue": "En retard"
+        },
+        "type": {
+          "habit": "Habitude",
+          "goal": "Objectif"
+        },
+        "points": "+{xp} XP"
+      },
+      "progress": {
+        "title": "Progression XP",
+        "subtitle": "XP gagnés dans le temps",
+        "toggle": {
+          "last7": "7 derniers jours",
+          "last30": "30 derniers jours"
+        }
+      }
+    },
+    "goals": {
+      "title": "Objectifs & Habitudes",
+      "description": "Créez votre système de progression",
+      "filters": {
+        "category": "Catégorie",
+        "sort": "Trier par",
+        "sortOptions": {
+          "upcoming": "Échéance la plus proche",
+          "streak": "Plus longue série",
+          "xp": "XP les plus élevés"
+        }
+      },
+      "actions": {
+        "newGoal": "Créer un objectif",
+        "newHabit": "Créer une habitude"
+      },
+      "goalsTab": "Objectifs",
+      "habitsTab": "Habitudes",
+      "table": {
+        "goal": "Objectif",
+        "habit": "Habitude",
+        "category": "Catégorie",
+        "xp": "XP",
+        "status": "Statut",
+        "target": "Échéance",
+        "recurrence": "Récurrence",
+        "streak": "Série"
+      }
+    },
+    "rewards": {
+      "title": "Marketplace des récompenses",
+      "description": "Transformez vos efforts en récompenses motivantes",
+      "balance": "Solde actuel",
+      "marketplace": "Récompenses disponibles",
+      "history": "Historique des dépenses",
+      "redeem": "Débloquer",
+      "emptyHistory": "Aucune récompense utilisée pour le moment",
+      "cost": "{cost} jetons"
+    },
+    "analytics": {
+      "title": "Analyses & progression",
+      "description": "Comprenez l'histoire derrière votre constance",
+      "xp": "XP gagnés par mois",
+      "completion": "Taux de complétion",
+      "completionSummary": "{completed} sur {scheduled} terminés",
+      "streaks": "Points forts des séries",
+      "tokens": "Jetons gagnés vs dépensés",
+      "badges": "Succès débloqués"
+    },
+    "profile": {
+      "title": "Profil & réglages",
+      "description": "Personnalisez la façon dont Ascent vous accompagne",
+      "account": "Compte",
+      "preferences": "Préférences",
+      "security": "Sécurité",
+      "securityLastLogin": "Dernière connexion",
+      "securityDevices": "Appareils utilisés : {count}",
+      "securityMfa": "Double authentification : {status}",
+      "securityStatus": {
+        "enabled": "Activée",
+        "disabled": "Désactivée"
+      },
+      "upcoming": "Fonctionnalités à venir",
+      "theme": "Thème",
+      "recurrence": "Récurrence par défaut",
+      "notifications": "Notifications",
+      "notificationOptions": {
+        "push": "Notifications push",
+        "email": "Récapitulatif par email",
+        "weekly": "Rapport hebdomadaire"
+      },
+      "actions": {
+        "changePassword": "Changer le mot de passe",
+        "signOut": "Se déconnecter",
+        "linkAccounts": "Lier ses comptes",
+        "exportData": "Exporter les données"
+      }
+    }
+  }
+}

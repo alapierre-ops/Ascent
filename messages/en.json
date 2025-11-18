@@ -1,0 +1,170 @@
+{
+  "auth": {
+    "welcome": "Welcome to Ascent",
+    "subtitle": "Start your journey of continuous improvement",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "createAccount": "Create Account",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••",
+    "namePlaceholder": "John Doe",
+    "features": {
+      "title": "Turn self-improvement into a measurable, gamified experience.",
+      "description": "Track goals, build habits, and level up your life with XP-based progress tracking.",
+      "setGoals": {
+        "title": "Set Goals",
+        "description": "Create personal objectives across fitness, learning, and productivity."
+      },
+      "earnXP": {
+        "title": "Earn XP",
+        "description": "Complete tasks and earn experience points to track your progress."
+      },
+      "trackStreaks": {
+        "title": "Track Streaks",
+        "description": "Build consistency with streak counters and real-time progress charts."
+      },
+      "visualize": {
+        "title": "Visualize",
+        "description": "See your growth with beautiful charts and dynamic feedback."
+      }
+    }
+  },
+  "common": {
+    "all": "All"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {name}",
+    "tabs": {
+      "overview": "Overview",
+      "goals": "Goals & Habits",
+      "rewards": "Rewards",
+      "analytics": "Analytics",
+      "profile": "Profile & Settings"
+    },
+    "overview": {
+      "summary": {
+        "level": "Current level",
+        "xp": "Current XP",
+        "tokens": "Tokens available",
+        "next": "Next milestone"
+      },
+      "hero": {
+        "subtitle": "You're on a {streak}-day streak. Keep climbing!",
+        "cta": "View milestones",
+        "tokens": "Tokens saved",
+        "weeklyGain": "+{xp} XP this week",
+        "placeholderTabs": "Future modes · Progress · Rewards"
+      },
+      "streaks": {
+        "title": "Active streak leaders",
+        "subtitle": "Keep your momentum strong",
+        "days": "{count} day streak",
+        "rank": "Top #{rank}"
+      },
+      "tasks": {
+        "title": "Today's focus",
+        "subtitle": "Habits and goals scheduled for today",
+        "due": "Due",
+        "status": {
+          "scheduled": "Scheduled",
+          "overdue": "Overdue"
+        },
+        "type": {
+          "habit": "Habit",
+          "goal": "Goal"
+        },
+        "points": "+{xp} XP"
+      },
+      "progress": {
+        "title": "XP momentum",
+        "subtitle": "Experience earned over time",
+        "toggle": {
+          "last7": "Last 7 days",
+          "last30": "Last 30 days"
+        }
+      }
+    },
+    "goals": {
+      "title": "Goals & Habits",
+      "description": "Design your progression system",
+      "filters": {
+        "category": "Category",
+        "sort": "Sort by",
+        "sortOptions": {
+          "upcoming": "Upcoming deadline",
+          "streak": "Longest streak",
+          "xp": "Highest XP"
+        }
+      },
+      "actions": {
+        "newGoal": "Create goal",
+        "newHabit": "Create habit"
+      },
+      "goalsTab": "Goals",
+      "habitsTab": "Habits",
+      "table": {
+        "goal": "Goal",
+        "habit": "Habit",
+        "category": "Category",
+        "xp": "XP",
+        "status": "Status",
+        "target": "Target",
+        "recurrence": "Recurrence",
+        "streak": "Streak"
+      }
+    },
+    "rewards": {
+      "title": "Rewards marketplace",
+      "description": "Convert your effort into meaningful incentives",
+      "balance": "Current balance",
+      "marketplace": "Available rewards",
+      "history": "Redemption history",
+      "redeem": "Redeem",
+      "emptyHistory": "No rewards redeemed yet",
+      "cost": "{cost} tokens"
+    },
+    "analytics": {
+      "title": "Analytics & progress",
+      "description": "Understand the story behind your consistency",
+      "xp": "XP earned per month",
+      "completion": "Completion rate",
+      "completionSummary": "{completed} of {scheduled} completed",
+      "streaks": "Streak highlights",
+      "tokens": "Tokens earned vs spent",
+      "badges": "Achievements unlocked"
+    },
+    "profile": {
+      "title": "Profile & settings",
+      "description": "Personalize how Ascent supports your growth",
+      "account": "Account",
+      "preferences": "Preferences",
+      "security": "Security",
+      "securityLastLogin": "Last login",
+      "securityDevices": "Devices in use: {count}",
+      "securityMfa": "Multi-factor authentication: {status}",
+      "securityStatus": {
+        "enabled": "Enabled",
+        "disabled": "Disabled"
+      },
+      "upcoming": "Upcoming features",
+      "theme": "Theme",
+      "recurrence": "Default recurrence",
+      "notifications": "Notifications",
+      "notificationOptions": {
+        "push": "Push notifications",
+        "email": "Email summaries",
+        "weekly": "Weekly report"
+      },
+      "actions": {
+        "changePassword": "Change password",
+        "signOut": "Sign out",
+        "linkAccounts": "Link social accounts",
+        "exportData": "Export data"
+      }
+    }
+  }
+}
