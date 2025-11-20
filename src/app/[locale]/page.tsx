@@ -45,10 +45,10 @@ export default function Home() {
               </h1>
             </div>
             <p className="text-xl text-slate-600 dark:text-slate-300 font-medium">
-              {t("features.title")}
+              {t("auth.features.title")}
             </p>
             <p className="text-slate-500 dark:text-slate-400">
-              {t("features.description")}
+              {t("auth.features.description")}
             </p>
           </div>
 
@@ -56,37 +56,37 @@ export default function Home() {
             <div className="space-y-2 p-4 rounded-lg bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
               <Target className="w-6 h-6 text-indigo-600 dark:text-indigo-400 mb-2" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("features.setGoals.title")}
+                {t("auth.features.setGoals.title")}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t("features.setGoals.description")}
+                {t("auth.features.setGoals.description")}
               </p>
             </div>
             <div className="space-y-2 p-4 rounded-lg bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
               <Zap className="w-6 h-6 text-yellow-500 mb-2" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("features.earnXP.title")}
+                {t("auth.features.earnXP.title")}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t("features.earnXP.description")}
+                {t("auth.features.earnXP.description")}
               </p>
             </div>
             <div className="space-y-2 p-4 rounded-lg bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
               <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400 mb-2" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("features.trackStreaks.title")}
+                {t("auth.features.trackStreaks.title")}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t("features.trackStreaks.description")}
+                {t("auth.features.trackStreaks.description")}
               </p>
             </div>
             <div className="space-y-2 p-4 rounded-lg bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
               <Sparkles className="w-6 h-6 text-purple-600 dark:text-purple-400 mb-2" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("features.visualize.title")}
+                {t("auth.features.visualize.title")}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t("features.visualize.description")}
+                {t("auth.features.visualize.description")}
               </p>
             </div>
           </div>

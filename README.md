@@ -37,17 +37,17 @@ This project is built with a modern, full-stack, serverless architecture.
 | | [Framer Motion](https://www.framer.com/motion/) | Animations & Transitions |
 | **Backend** | [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) | Serverless Backend Logic |
 | **Authentication**| [NextAuth.js](https://next-auth.js.org/) | Authentication & Session Management |
-| **Database** | [Amazon DynamoDB](https://aws.amazon.com/dynamodb/) | NoSQL Serverless Database |
+| **Database** | [PostgreSQL](https://www.postgresql.org/) | Relational Database |
+| **ORM** | [Prisma](https://www.prisma.io/) | Type-safe Database Access |
 | **State** | [Zustand](https://github.com/pmndrs/zustand) | Minimalist State Management |
 | **Validation** | [Zod](https://zod.dev/) | Schema Validation |
 | **Infra & Hosting**| [Vercel](https://vercel.com/) | Frontend Hosting & CI/CD |
-| | [AWS CDK (TypeScript)](https://aws.amazon.com/cdk/) | Infrastructure as Code (for DynamoDB) |
 
 ### 🏛️ Architecture
 
-This project uses a "Vercel + Managed AWS" architecture:
+This project uses a modern full-stack architecture:
 
 1.  **Frontend (Vercel):** The Next.js application is hosted on Vercel.
 2.  **Authentication (Vercel):** `NextAuth.js` runs on Vercel, managing user sessions.
-3.  **Backend (Vercel):** Secure **Next.js API Routes** act as the backend. They check the user's session, validate input with `Zod`, and then use the AWS SDK to communicate directly with DynamoDB.
-4.  **Database (AWS):** `DynamoDB` acts as the persistent data layer, managed via `CDK`.
+3.  **Backend (Vercel):** Secure **Next.js API Routes** act as the backend. They check the user's session, validate input with `Zod`, and use Prisma to communicate with PostgreSQL.
+4.  **Database:** `PostgreSQL` acts as the persistent data layer, accessed via Prisma ORM.

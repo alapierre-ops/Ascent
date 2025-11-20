@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id            String    @id @default(cuid()) // Identifiant unique
+  email         String    @unique
+  name          String?
+  password      String?
+  createdAt     DateTime  @default(now())
+  
+  // --- GAMIFICATION (MVP) ---
+  level         Int       @default(1)
+  xp            Int       @default(0)      // Expérience actuelle
+  currency      Int       @default(0)      // "Gold" à dépenser
+  
+  // --- SOCIAL & V2 (Futur) ---
+  bio           String?
+  image         String?   // Avatar URL
+  streakFreeze  Int       @default(0)      // Jokers pour sauver une série (Payant/Rare)
+  
+  // --- RELATIONS ---
+  habits        Habit[]
+  logs          HabitLog[]
+  rewards       UserReward[]
+  badges        UserBadge[]
+  
+  // Relation Sociale (Self-referencing many-to-many pour les amis)
+  followedBy    UserFollows[] @relation("following")
+  following     UserFollows[] @relation("follower")
+}
+
+model UserFollows {
+  follower    User @relation("follower", fields: [followerId], references: [id])
+  followerId  String
+  following   User @relation("following", fields: [followingId], references: [id])
+  followingId String
+
+  @@id([followerId, followingId]) // Clé composée
+}
+
+enum HabitType {
+  DAILY_HABIT    // Récurrent (ex: Boire de l'eau)
+  ONE_OFF_TASK   // Unique (ex: Ranger le garage)
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Habit {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  
+  title         String
+  description   String?
+  type          HabitType
+  difficulty    Difficulty  @default(MEDIUM)
+  
+  // --- RÉCOMPENSES ---
+  xpReward      Int         // Ex: 10 XP (calculé selon difficulté)
+  goldReward    Int         // Ex: 5 Gold
+  
+  // --- SUIVI DES SÉRIES (STREAKS) ---
+  currentStreak Int         @default(0)
+  longestStreak Int         @default(0)
+  isArchived    Boolean     @default(false) // Soft delete
+  
+  createdAt     DateTime    @default(now())
+  
+  // Historique des réalisations
+  logs          HabitLog[]
+}
+
+// Table d'historique : Pour les graphiques et vérifier les séries
+model HabitLog {
+  id            String    @id @default(cuid())
+  habitId       String
+  habit         Habit     @relation(fields: [habitId], references: [id])
+  userId        String    // Dénormalisation pour requêtes rapides "Tous les logs du user"
+  user          User      @relation(fields: [userId], references: [id])
+  
+  completedAt   DateTime  @default(now())
+  xpEarned      Int       // On stocke la valeur au moment T (si ça change plus tard)
+  goldEarned    Int
+}
+
+enum RewardType {
+  REAL_LIFE    // Créé par l'user (ex: "Soirée Pizza")
+  COSMETIC     // Créé par l'app (ex: "Cadre Avatar Doré")
+}
+
+model Reward {
+  id            String      @id @default(cuid())
+  creatorId     String?     // Null si c'est une récompense système (Admin)
+  
+  title         String
+  cost          Int         // Prix en Gold
+  type          RewardType
+  icon          String?     // Emoji ou URL image
+  
+  // Relation vers les achats des utilisateurs
+  usersUnlocked UserReward[]
+}
+
+// Table de liaison : Qui possède quoi ?
+model UserReward {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  rewardId      String
+  reward        Reward    @relation(fields: [rewardId], references: [id])
+  
+  purchasedAt   DateTime  @default(now())
+  isConsumed    Boolean   @default(false) // Pour les récompenses "One shot" (Pizza)
+}
+
+model Badge {
+  id          String      @id @default(cuid())
+  name        String      // Ex: "Marathonien"
+  description String      // Ex: "Avoir une série de 30 jours"
+  icon        String
+  condition   String      // Code interne pour trigger (ex: "STREAK_30")
+  
+  users       UserBadge[]
+}
+
+model UserBadge {
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  badgeId     String
+  badge       Badge     @relation(fields: [badgeId], references: [id])
+  unlockedAt  DateTime  @default(now())
+
+  @@id([userId, badgeId])
+}
