@@ -13,6 +13,5 @@ next-env.d.ts
 
 
 .DS_Store
-.vscode/
 .idea/
 package-lock.json
