@@ -11,6 +11,17 @@
     "emailPlaceholder": "you@example.com",
     "passwordPlaceholder": "••••••••",
     "namePlaceholder": "John Doe",
+    "loading": "Loading...",
+    "orContinueWith": "Or continue with",
+    "continueWithGoogle": "Continue with Google",
+    "errors": {
+      "loginFailed": "Login failed. Please check your credentials.",
+      "signupFailed": "Signup failed. Please try again.",
+      "serverError": "Server error. Please try again later.",
+      "emailExists": "Email already registered",
+      "invalidCredentials": "Invalid email or password",
+      "useGoogleSignin": "This account was created with Google. Please use the 'Continue with Google' button."
+    },
     "features": {
       "title": "Turn self-improvement into a measurable, gamified experience.",
       "description": "Track goals, build habits, and level up your life with XP-based progress tracking.",

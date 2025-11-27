@@ -11,6 +11,17 @@
     "emailPlaceholder": "vous@exemple.com",
     "passwordPlaceholder": "••••••••",
     "namePlaceholder": "Jean Dupont",
+    "loading": "Chargement...",
+    "orContinueWith": "Ou continuer avec",
+    "continueWithGoogle": "Continuer avec Google",
+    "errors": {
+      "loginFailed": "Connexion échouée. Veuillez vérifier vos identifiants.",
+      "signupFailed": "Inscription échouée. Veuillez réessayer.",
+      "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
+      "emailExists": "Email déjà enregistré",
+      "invalidCredentials": "Email ou mot de passe invalide",
+      "useGoogleSignin": "Ce compte a été créé avec Google. Veuillez utiliser le bouton 'Continuer avec Google'."
+    },
     "features": {
       "title": "Transformez l'amélioration personnelle en une expérience mesurable et ludifiée.",
       "description": "Suivez vos objectifs, développez des habitudes et faites évoluer votre vie avec un suivi de progression basé sur les XP.",
@@ -31,6 +42,9 @@
         "description": "Visualisez votre croissance avec de beaux graphiques et des retours dynamiques."
       }
     }
+  },
+  "common": {
+    "all": "Tous"
   },
   "dashboard": {
     "title": "Tableau de bord",
