@@ -45,14 +45,26 @@
     "overview": {
       "summary": {
         "level": "Niveau actuel",
-        "xp": "XP actuels",
-        "tokens": "Jetons disponibles",
+        "xp": "XP actuel",
+        "gold": "Or",
+        "totalXP": "XP total",
         "next": "Prochaine étape"
+      },
+      "level": {
+        "allLevels": "Tous les niveaux",
+        "description": "Voir tous les niveaux, récompenses et exigences",
+        "level": "Niveau",
+        "current": "Actuel",
+        "next": "Suivant",
+        "xpRequired": "XP requis",
+        "nextReward": "Récompense du prochain niveau",
+        "progress": "Progression",
+        "xpNeeded": "{xp} XP nécessaires"
       },
       "hero": {
         "subtitle": "Vous êtes sur une série de {streak} jours. Continuez l'ascension !",
         "cta": "Voir les jalons",
-        "tokens": "Jetons économisés",
+        "gold": "Or économisé",
         "weeklyGain": "+{xp} XP cette semaine",
         "placeholderTabs": "Modes à venir · Progression · Récompenses"
       },
@@ -161,6 +173,32 @@
         "signOut": "Se déconnecter",
         "linkAccounts": "Lier ses comptes",
         "exportData": "Exporter les données"
+      }
+    },
+    "avatarPicker": {
+      "title": "Choisissez votre avatar",
+      "description": "Sélectionnez un avatar prédéfini ou téléchargez votre propre image",
+      "preview": "Aperçu",
+      "tabs": {
+        "predefined": "Prédéfini",
+        "upload": "Télécharger"
+      },
+      "upload": {
+        "title": "Téléchargez votre image",
+        "description": "JPG, PNG ou GIF. Max 5MB",
+        "button": "Choisir un fichier",
+        "uploading": "Téléchargement...",
+        "remove": "Retirer"
+      },
+      "actions": {
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "remove": "Retirer l'avatar"
+      },
+      "errors": {
+        "invalidFileType": "Veuillez sélectionner un fichier image valide",
+        "fileTooLarge": "La taille du fichier doit être inférieure à 5MB",
+        "uploadFailed": "Échec du téléchargement de l'image. Veuillez réessayer."
       }
     }
   }

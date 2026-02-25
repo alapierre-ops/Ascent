@@ -49,13 +49,25 @@
       "summary": {
         "level": "Current level",
         "xp": "Current XP",
-        "tokens": "Tokens available",
+        "gold": "Gold",
+        "totalXP": "Total XP",
         "next": "Next milestone"
+      },
+      "level": {
+        "allLevels": "All Levels",
+        "description": "View all levels, rewards, and requirements",
+        "level": "Level",
+        "current": "Current",
+        "next": "Next",
+        "xpRequired": "XP Required",
+        "nextReward": "Next level reward",
+        "progress": "Progress",
+        "xpNeeded": "{xp} XP needed"
       },
       "hero": {
         "subtitle": "You're on a {streak}-day streak. Keep climbing!",
         "cta": "View milestones",
-        "tokens": "Tokens saved",
+        "gold": "Gold saved",
         "weeklyGain": "+{xp} XP this week",
         "placeholderTabs": "Future modes · Progress · Rewards"
       },
@@ -164,6 +176,32 @@
         "signOut": "Sign out",
         "linkAccounts": "Link social accounts",
         "exportData": "Export data"
+      }
+    },
+    "avatarPicker": {
+      "title": "Choose your avatar",
+      "description": "Select a predefined avatar or upload your own picture",
+      "preview": "Preview",
+      "tabs": {
+        "predefined": "Predefined",
+        "upload": "Upload"
+      },
+      "upload": {
+        "title": "Upload your picture",
+        "description": "JPG, PNG or GIF. Max 5MB",
+        "button": "Choose file",
+        "uploading": "Uploading...",
+        "remove": "Remove"
+      },
+      "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "remove": "Remove avatar"
+      },
+      "errors": {
+        "invalidFileType": "Please select a valid image file",
+        "fileTooLarge": "File size must be less than 5MB",
+        "uploadFailed": "Failed to upload image. Please try again."
       }
     }
   }
