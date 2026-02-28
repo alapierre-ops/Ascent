@@ -25,12 +25,20 @@ export default function Home() {
   const router = useRouter()
   const locale = useLocale()
 
+  const translateZodError = (message: string) => {
+    if (message.includes('Invalid email')) return t('auth.errors.invalidEmail')
+    if (message.includes('at least 6')) return t('auth.errors.passwordTooShort')
+    if (message.includes('at least 2')) return t('auth.errors.nameTooShort')
+    return t('auth.errors.signupFailed')
+  }
+
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [signupEmail, setSignupEmail] = useState('')
   const [signupPassword, setSignupPassword] = useState('')
   const [signupName, setSignupName] = useState('')
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleSignIn = async () => {
@@ -38,7 +46,7 @@ export default function Home() {
     setIsLoading(true)
     try {
       await signIn('google', { callbackUrl: `/${locale}/dashboard` })
-    } catch (err) {
+    } catch {
       setError(t('auth.errors.serverError'))
       setIsLoading(false)
     }
@@ -82,7 +90,7 @@ export default function Home() {
 
       router.push(`/${locale}/dashboard`)
       router.refresh()
-    } catch (err) {
+    } catch {
       setError(t('auth.errors.serverError'))
       setIsLoading(false)
     }
@@ -91,6 +99,7 @@ export default function Home() {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccessMessage('')
     setIsLoading(true)
 
     try {
@@ -103,6 +112,7 @@ export default function Home() {
           email: signupEmail,
           password: signupPassword,
           name: signupName,
+          locale,
         }),
       })
 
@@ -112,8 +122,8 @@ export default function Home() {
         const errorMessage =
           data.error === 'EMAIL_ALREADY_EXISTS'
             ? t('auth.errors.emailExists')
-            : data.error === 'VALIDATION_ERROR'
-              ? t('auth.errors.signupFailed')
+            : data.error === 'VALIDATION_ERROR' && data.message
+              ? translateZodError(data.message)
               : data.error === 'SERVER_ERROR'
                 ? t('auth.errors.serverError')
                 : t('auth.errors.signupFailed')
@@ -121,6 +131,8 @@ export default function Home() {
         setIsLoading(false)
         return
       }
+
+      setSuccessMessage(t('auth.emailSentOnRegister'))
 
       const result = await signIn('credentials', {
         email: signupEmail,
@@ -136,7 +148,7 @@ export default function Home() {
 
       router.push(`/${locale}/dashboard`)
       router.refresh()
-    } catch (err) {
+    } catch {
       setError(t('auth.errors.serverError'))
       setIsLoading(false)
     }
@@ -165,7 +177,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-8">
-            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-800/50">
+            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-indigo-200/70 hover:bg-white/80 hover:shadow-md dark:border-slate-700/50 dark:bg-slate-800/50 dark:hover:border-indigo-700/50 dark:hover:bg-slate-800/80">
               <Target className="mb-2 h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                 {t('auth.features.setGoals.title')}
@@ -174,7 +186,7 @@ export default function Home() {
                 {t('auth.features.setGoals.description')}
               </p>
             </div>
-            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-800/50">
+            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-indigo-200/70 hover:bg-white/80 hover:shadow-md dark:border-slate-700/50 dark:bg-slate-800/50 dark:hover:border-indigo-700/50 dark:hover:bg-slate-800/80">
               <Zap className="mb-2 h-6 w-6 text-yellow-500" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                 {t('auth.features.earnXP.title')}
@@ -183,7 +195,7 @@ export default function Home() {
                 {t('auth.features.earnXP.description')}
               </p>
             </div>
-            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-800/50">
+            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-indigo-200/70 hover:bg-white/80 hover:shadow-md dark:border-slate-700/50 dark:bg-slate-800/50 dark:hover:border-indigo-700/50 dark:hover:bg-slate-800/80">
               <TrendingUp className="mb-2 h-6 w-6 text-green-600 dark:text-green-400" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                 {t('auth.features.trackStreaks.title')}
@@ -192,7 +204,7 @@ export default function Home() {
                 {t('auth.features.trackStreaks.description')}
               </p>
             </div>
-            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-800/50">
+            <div className="space-y-2 rounded-lg border border-slate-200/50 bg-white/50 p-4 backdrop-blur-sm transition-all hover:border-indigo-200/70 hover:bg-white/80 hover:shadow-md dark:border-slate-700/50 dark:bg-slate-800/50 dark:hover:border-indigo-700/50 dark:hover:bg-slate-800/80">
               <Sparkles className="mb-2 h-6 w-6 text-purple-600 dark:text-purple-400" />
               <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                 {t('auth.features.visualize.title')}
@@ -227,6 +239,12 @@ export default function Home() {
                 </div>
               )}
 
+              {successMessage && (
+                <div className="mb-4 rounded-md border border-green-300 bg-green-100 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                  {successMessage}
+                </div>
+              )}
+
               <Tabs defaultValue="login" className="w-full">
                 <TabsList className="mb-6 grid w-full grid-cols-2">
                   <TabsTrigger value="login">{t('auth.signIn')}</TabsTrigger>
@@ -247,9 +265,17 @@ export default function Home() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="login-password">
-                        {t('auth.password')}
-                      </Label>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-password">
+                          {t('auth.password')}
+                        </Label>
+                        <a
+                          href={`/${locale}/reset-password`}
+                          className="text-xs text-indigo-600 transition-colors hover:text-indigo-800 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
+                        >
+                          {t('auth.forgotPassword')}
+                        </a>
+                      </div>
                       <Input
                         id="login-password"
                         type="password"
@@ -261,7 +287,7 @@ export default function Home() {
                     </div>
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       size="lg"
                       disabled={isLoading}
                     >
@@ -283,7 +309,7 @@ export default function Home() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
                   >
@@ -348,7 +374,7 @@ export default function Home() {
                     </div>
                     <Button
                       type="submit"
-                      className="w-full"
+                      className="w-full cursor-pointer"
                       size="lg"
                       disabled={isLoading}
                     >
@@ -370,7 +396,7 @@ export default function Home() {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full cursor-pointer"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
                   >

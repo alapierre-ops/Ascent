@@ -14,13 +14,47 @@
     "loading": "Loading...",
     "orContinueWith": "Or continue with",
     "continueWithGoogle": "Continue with Google",
+    "forgotPassword": "Forgot password?",
+    "emailSentOnRegister": "Account created! Check your inbox to verify your email address.",
+    "verifyEmail": {
+      "title": "Email verification",
+      "verifying": "Verifying your email...",
+      "success": "Your email has been verified! You can now access all features.",
+      "goToDashboard": "Go to dashboard",
+      "errors": {
+        "invalidToken": "This verification link is invalid or has already been used."
+      }
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "requestSubtitle": "Enter your email address and we'll send you a reset link",
+      "confirmSubtitle": "Enter your new password below",
+      "requestSubmit": "Send reset link",
+      "submit": "Set new password",
+      "backToLogin": "Back to login",
+      "emailSent": "If an account exists for this email, you will receive a password reset link shortly. Check your inbox.",
+      "success": "Your password has been reset. You can now sign in with your new password.",
+      "newPassword": "New password",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "Confirm new password",
+      "errors": {
+        "invalidToken": "This reset link is invalid. Please request a new one.",
+        "tokenExpired": "This reset link has expired. Please request a new one."
+      }
+    },
     "errors": {
       "loginFailed": "Login failed. Please check your credentials.",
       "signupFailed": "Signup failed. Please try again.",
       "serverError": "Server error. Please try again later.",
       "emailExists": "Email already registered",
       "invalidCredentials": "Invalid email or password",
-      "useGoogleSignin": "This account was created with Google. Please use the 'Continue with Google' button."
+      "useGoogleSignin": "This account was created with Google. Please use the 'Continue with Google' button.",
+      "passwordMismatch": "Passwords do not match",
+      "userNotFound": "No account found with this email address",
+      "resetFailed": "Password reset failed. Please try again.",
+      "invalidEmail": "Invalid email format",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "nameTooShort": "Name must be at least 2 characters"
     },
     "features": {
       "title": "Turn self-improvement into a measurable, gamified experience.",

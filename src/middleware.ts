@@ -7,21 +7,34 @@ import { routing } from './i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
+const PROTECTED_ROUTES = ['/dashboard', '/goals']
+const AUTH_ONLY_ROUTES = ['reset-password']
+const PUBLIC_AUTH_PATHS = ['en', 'fr']
+
 export default auth(async function middleware(req) {
   const { pathname } = req.nextUrl
+  const session = req.auth
+  const locale = pathname.split('/')[1] || 'en'
 
-  const response = intlMiddleware(req as NextRequest)
+  const isProtected = PROTECTED_ROUTES.some((route) => pathname.includes(route))
+  const isAuthOnlyRoute = AUTH_ONLY_ROUTES.some((route) =>
+    pathname.includes(route)
+  )
+  const isLoginPage =
+    PUBLIC_AUTH_PATHS.includes(pathname.split('/')[1]) &&
+    pathname.split('/').length === 2
 
-  if (pathname.includes('/dashboard') || pathname.includes('/goals')) {
-    const session = req.auth
-
-    if (!session) {
-      const locale = pathname.split('/')[1] || 'en'
-      const loginUrl = new URL(`/${locale}`, req.url)
-      return NextResponse.redirect(loginUrl)
-    }
+  if (isProtected && !session) {
+    const loginUrl = new URL(`/${locale}`, req.url)
+    return NextResponse.redirect(loginUrl)
   }
 
+  if ((isLoginPage || isAuthOnlyRoute) && session) {
+    const dashboardUrl = new URL(`/${locale}/dashboard`, req.url)
+    return NextResponse.redirect(dashboardUrl)
+  }
+
+  const response = intlMiddleware(req as NextRequest)
   return response
 })
 

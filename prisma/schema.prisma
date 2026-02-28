@@ -12,7 +12,11 @@ model User {
   id            String    @id @default(cuid()) // Identifiant unique
   email         String    @unique
   name          String?
-  password      String?
+  password          String?
+  resetToken           String?   @unique
+  resetTokenExpiry     DateTime?
+  emailVerified        Boolean   @default(false)
+  verificationToken    String?   @unique
   createdAt     DateTime  @default(now())
   
   // --- GAMIFICATION (MVP) ---

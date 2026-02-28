@@ -14,13 +14,47 @@
     "loading": "Chargement...",
     "orContinueWith": "Ou continuer avec",
     "continueWithGoogle": "Continuer avec Google",
+    "forgotPassword": "Mot de passe oublié ?",
+    "emailSentOnRegister": "Compte créé ! Consultez votre boîte mail pour vérifier votre adresse email.",
+    "verifyEmail": {
+      "title": "Vérification de l'email",
+      "verifying": "Vérification de votre adresse email...",
+      "success": "Votre adresse email a été vérifiée ! Vous pouvez maintenant accéder à toutes les fonctionnalités.",
+      "goToDashboard": "Aller au tableau de bord",
+      "errors": {
+        "invalidToken": "Ce lien de vérification est invalide ou a déjà été utilisé."
+      }
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "requestSubtitle": "Entrez votre adresse email et nous vous enverrons un lien de réinitialisation",
+      "confirmSubtitle": "Entrez votre nouveau mot de passe ci-dessous",
+      "requestSubmit": "Envoyer le lien de réinitialisation",
+      "submit": "Définir le nouveau mot de passe",
+      "backToLogin": "Retour à la connexion",
+      "emailSent": "Si un compte existe pour cet email, vous recevrez un lien de réinitialisation sous peu. Vérifiez votre boîte de réception.",
+      "success": "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "••••••••",
+      "confirmPassword": "Confirmer le nouveau mot de passe",
+      "errors": {
+        "invalidToken": "Ce lien de réinitialisation est invalide. Veuillez en demander un nouveau.",
+        "tokenExpired": "Ce lien de réinitialisation a expiré. Veuillez en demander un nouveau."
+      }
+    },
     "errors": {
       "loginFailed": "Connexion échouée. Veuillez vérifier vos identifiants.",
       "signupFailed": "Inscription échouée. Veuillez réessayer.",
       "serverError": "Erreur serveur. Veuillez réessayer plus tard.",
       "emailExists": "Email déjà enregistré",
       "invalidCredentials": "Email ou mot de passe invalide",
-      "useGoogleSignin": "Ce compte a été créé avec Google. Veuillez utiliser le bouton 'Continuer avec Google'."
+      "useGoogleSignin": "Ce compte a été créé avec Google. Veuillez utiliser le bouton 'Continuer avec Google'.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "userNotFound": "Aucun compte trouvé avec cette adresse email",
+      "resetFailed": "Échec de la réinitialisation. Veuillez réessayer.",
+      "invalidEmail": "Format d'email invalide",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+      "nameTooShort": "Le nom doit contenir au moins 2 caractères"
     },
     "features": {
       "title": "Transformez l'amélioration personnelle en une expérience mesurable et ludifiée.",
