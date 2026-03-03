@@ -93,14 +93,26 @@
     "overview": {
       "summary": {
         "level": "Niveau actuel",
-        "xp": "XP actuels",
-        "tokens": "Jetons disponibles",
+        "xp": "XP actuel",
+        "gold": "Or",
+        "totalXP": "XP total",
         "next": "Prochaine étape"
+      },
+      "level": {
+        "allLevels": "Tous les niveaux",
+        "description": "Voir tous les niveaux, récompenses et exigences",
+        "level": "Niveau",
+        "current": "Actuel",
+        "next": "Suivant",
+        "xpRequired": "XP requis",
+        "nextReward": "Récompense du prochain niveau",
+        "progress": "Progression",
+        "xpNeeded": "{xp} XP nécessaires"
       },
       "hero": {
         "subtitle": "Vous êtes sur une série de {streak} jours. Continuez l'ascension !",
         "cta": "Voir les jalons",
-        "tokens": "Jetons économisés",
+        "gold": "Or économisé",
         "weeklyGain": "+{xp} XP cette semaine",
         "placeholderTabs": "Modes à venir · Progression · Récompenses"
       },
@@ -111,8 +123,15 @@
         "rank": "Top #{rank}"
       },
       "tasks": {
-        "title": "Focus du jour",
+        "title": "Aujourd'hui",
         "subtitle": "Habitudes et objectifs prévus aujourd'hui",
+        "taskCount": "{count} tâches",
+        "taskCount_one": "{count} tâche",
+        "taskCount_other": "{count} tâches",
+        "addTask": "Ajouter une tâche",
+        "emptyTitle": "Rien pour aujourd'hui",
+        "emptyDescription": "Ajoute une habitude ou un objectif pour commencer.",
+        "emptyCta": "Ajouter ma première tâche",
         "due": "Échéance",
         "status": {
           "scheduled": "Prévu",
@@ -210,6 +229,39 @@
         "linkAccounts": "Lier ses comptes",
         "exportData": "Exporter les données"
       }
+    },
+    "avatarPicker": {
+      "title": "Choisissez votre avatar",
+      "description": "Sélectionnez un avatar prédéfini",
+      "preview": "Aperçu",
+      "actions": {
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "remove": "Retirer l'avatar"
+      }
+    },
+    "streakModal": {
+      "share": "Partager",
+      "streakTitle": "Série de {count} jours !",
+      "goalTitle": "Objectif de streak",
+      "goalProgress": "{current} / {target} jours",
+      "goalUnlock": "Atteins une série de 7 jours pour débloquer des récompenses exclusives.",
+      "monthLongestStreak": "Plus longue série",
+      "monthActiveDays": "Jours actifs",
+      "daysUnit": "jours",
+      "weekdays": {
+        "mon": "L",
+        "tue": "M",
+        "wed": "M",
+        "thu": "J",
+        "fri": "V",
+        "sat": "S",
+        "sun": "D"
+      }
     }
+  },
+  "shop": {
+    "title": "Boutique",
+    "underConstruction": "En construction"
   }
 }

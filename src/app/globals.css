@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,4 +119,27 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes flame-wiggle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(-4deg);
+  }
+}
+
+/* Mobile: momentum scroll inside level list dialog */
+.levels-dialog-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Completed level row: force emerald (overrides * { border-border } from base) */
+.level-row-completed {
+  border-color: rgb(52 211 153 / 0.7) !important;
+  background-color: rgb(16 185 129 / 0.35) !important;
+  box-shadow: 0 0 12px rgb(16 185 129 / 0.25);
 }
