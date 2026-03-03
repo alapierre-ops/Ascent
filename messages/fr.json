@@ -75,8 +75,15 @@
         "rank": "Top #{rank}"
       },
       "tasks": {
-        "title": "Focus du jour",
+        "title": "Aujourd'hui",
         "subtitle": "Habitudes et objectifs prévus aujourd'hui",
+        "taskCount": "{count} tâches",
+        "taskCount_one": "{count} tâche",
+        "taskCount_other": "{count} tâches",
+        "addTask": "Ajouter une tâche",
+        "emptyTitle": "Rien pour aujourd'hui",
+        "emptyDescription": "Ajoute une habitude ou un objectif pour commencer.",
+        "emptyCta": "Ajouter ma première tâche",
         "due": "Échéance",
         "status": {
           "scheduled": "Prévu",
@@ -177,29 +184,36 @@
     },
     "avatarPicker": {
       "title": "Choisissez votre avatar",
-      "description": "Sélectionnez un avatar prédéfini ou téléchargez votre propre image",
+      "description": "Sélectionnez un avatar prédéfini",
       "preview": "Aperçu",
-      "tabs": {
-        "predefined": "Prédéfini",
-        "upload": "Télécharger"
-      },
-      "upload": {
-        "title": "Téléchargez votre image",
-        "description": "JPG, PNG ou GIF. Max 5MB",
-        "button": "Choisir un fichier",
-        "uploading": "Téléchargement...",
-        "remove": "Retirer"
-      },
       "actions": {
         "save": "Enregistrer",
         "cancel": "Annuler",
         "remove": "Retirer l'avatar"
-      },
-      "errors": {
-        "invalidFileType": "Veuillez sélectionner un fichier image valide",
-        "fileTooLarge": "La taille du fichier doit être inférieure à 5MB",
-        "uploadFailed": "Échec du téléchargement de l'image. Veuillez réessayer."
+      }
+    },
+    "streakModal": {
+      "share": "Partager",
+      "streakTitle": "Série de {count} jours !",
+      "goalTitle": "Objectif de streak",
+      "goalProgress": "{current} / {target} jours",
+      "goalUnlock": "Atteins une série de 7 jours pour débloquer des récompenses exclusives.",
+      "monthLongestStreak": "Plus longue série",
+      "monthActiveDays": "Jours actifs",
+      "daysUnit": "jours",
+      "weekdays": {
+        "mon": "L",
+        "tue": "M",
+        "wed": "M",
+        "thu": "J",
+        "fri": "V",
+        "sat": "S",
+        "sun": "D"
       }
     }
+  },
+  "shop": {
+    "title": "Boutique",
+    "underConstruction": "En construction"
   }
 }

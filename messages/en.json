@@ -78,8 +78,15 @@
         "rank": "Top #{rank}"
       },
       "tasks": {
-        "title": "Today's focus",
+        "title": "Today",
         "subtitle": "Habits and goals scheduled for today",
+        "taskCount": "{count} tasks",
+        "taskCount_one": "{count} task",
+        "taskCount_other": "{count} tasks",
+        "addTask": "Add task",
+        "emptyTitle": "Nothing for today",
+        "emptyDescription": "Add a habit or goal to get started.",
+        "emptyCta": "Add your first task",
         "due": "Due",
         "status": {
           "scheduled": "Scheduled",
@@ -180,29 +187,36 @@
     },
     "avatarPicker": {
       "title": "Choose your avatar",
-      "description": "Select a predefined avatar or upload your own picture",
+      "description": "Select a predefined avatar",
       "preview": "Preview",
-      "tabs": {
-        "predefined": "Predefined",
-        "upload": "Upload"
-      },
-      "upload": {
-        "title": "Upload your picture",
-        "description": "JPG, PNG or GIF. Max 5MB",
-        "button": "Choose file",
-        "uploading": "Uploading...",
-        "remove": "Remove"
-      },
       "actions": {
         "save": "Save",
         "cancel": "Cancel",
         "remove": "Remove avatar"
-      },
-      "errors": {
-        "invalidFileType": "Please select a valid image file",
-        "fileTooLarge": "File size must be less than 5MB",
-        "uploadFailed": "Failed to upload image. Please try again."
+      }
+    },
+    "streakModal": {
+      "share": "Share",
+      "streakTitle": "{count}-day streak!",
+      "goalTitle": "Streak goal",
+      "goalProgress": "{current} / {target} days",
+      "goalUnlock": "Reach a 7-day streak to unlock exclusive rewards.",
+      "monthLongestStreak": "Longest streak",
+      "monthActiveDays": "Active days",
+      "daysUnit": "days",
+      "weekdays": {
+        "mon": "M",
+        "tue": "T",
+        "wed": "W",
+        "thu": "T",
+        "fri": "F",
+        "sat": "S",
+        "sun": "S"
       }
     }
+  },
+  "shop": {
+    "title": "Shop",
+    "underConstruction": "Under construction"
   }
 }
