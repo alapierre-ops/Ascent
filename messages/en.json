@@ -94,13 +94,25 @@
       "summary": {
         "level": "Current level",
         "xp": "Current XP",
-        "tokens": "Tokens available",
+        "gold": "Gold",
+        "totalXP": "Total XP",
         "next": "Next milestone"
+      },
+      "level": {
+        "allLevels": "All Levels",
+        "description": "View all levels, rewards, and requirements",
+        "level": "Level",
+        "current": "Current",
+        "next": "Next",
+        "xpRequired": "XP Required",
+        "nextReward": "Next level reward",
+        "progress": "Progress",
+        "xpNeeded": "{xp} XP needed"
       },
       "hero": {
         "subtitle": "You're on a {streak}-day streak. Keep climbing!",
         "cta": "View milestones",
-        "tokens": "Tokens saved",
+        "gold": "Gold saved",
         "weeklyGain": "+{xp} XP this week",
         "placeholderTabs": "Future modes · Progress · Rewards"
       },
@@ -111,8 +123,15 @@
         "rank": "Top #{rank}"
       },
       "tasks": {
-        "title": "Today's focus",
+        "title": "Today",
         "subtitle": "Habits and goals scheduled for today",
+        "taskCount": "{count} tasks",
+        "taskCount_one": "{count} task",
+        "taskCount_other": "{count} tasks",
+        "addTask": "Add task",
+        "emptyTitle": "Nothing for today",
+        "emptyDescription": "Add a habit or goal to get started.",
+        "emptyCta": "Add your first task",
         "due": "Due",
         "status": {
           "scheduled": "Scheduled",
@@ -210,6 +229,39 @@
         "linkAccounts": "Link social accounts",
         "exportData": "Export data"
       }
+    },
+    "avatarPicker": {
+      "title": "Choose your avatar",
+      "description": "Select a predefined avatar",
+      "preview": "Preview",
+      "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "remove": "Remove avatar"
+      }
+    },
+    "streakModal": {
+      "share": "Share",
+      "streakTitle": "{count}-day streak!",
+      "goalTitle": "Streak goal",
+      "goalProgress": "{current} / {target} days",
+      "goalUnlock": "Reach a 7-day streak to unlock exclusive rewards.",
+      "monthLongestStreak": "Longest streak",
+      "monthActiveDays": "Active days",
+      "daysUnit": "days",
+      "weekdays": {
+        "mon": "M",
+        "tue": "T",
+        "wed": "W",
+        "thu": "T",
+        "fri": "F",
+        "sat": "S",
+        "sun": "S"
+      }
     }
+  },
+  "shop": {
+    "title": "Shop",
+    "underConstruction": "Under construction"
   }
 }
