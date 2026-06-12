@@ -1,6 +1,25 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const MOCK_EMAILS =
+  process.env.MOCK_EMAILS === 'true' ||
+  process.env.CI === 'true' ||
+  !!(
+    process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith('test')
+  )
+
+const resend = MOCK_EMAILS ? null : new Resend(process.env.RESEND_API_KEY)
+
+async function sendEmail(payload: Record<string, unknown>) {
+  if (MOCK_EMAILS) {
+    console.log('[mock] sendEmail', {
+      to: payload.to,
+      subject: payload.subject,
+    })
+    return { data: { id: `mock-${Date.now()}` }, error: null }
+  }
+  // @ts-expect-error - runtime call into Resend
+  return await resend.emails.send(payload)
+}
 
 export async function sendPasswordResetEmail({
   to,
@@ -100,7 +119,7 @@ export async function sendPasswordResetEmail({
 </body>
 </html>`
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await sendEmail({
     from: process.env.RESEND_FROM_EMAIL!,
     to,
     subject,
@@ -213,7 +232,7 @@ export async function sendVerificationEmail({
 </body>
 </html>`
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await sendEmail({
     from: process.env.RESEND_FROM_EMAIL!,
     to,
     subject,

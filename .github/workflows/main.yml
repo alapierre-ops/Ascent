@@ -26,6 +26,9 @@ jobs:
       NEXTAUTH_SECRET: test-secret-key
       RESEND_API_KEY: test-dummy-key
       NODE_ENV: production
+      NEXTAUTH_URL: http://localhost:3000
+      AUTH_URL: http://localhost:3000
+      MOCK_EMAILS: 'true'
     steps:
       - uses: actions/checkout@v4
       
