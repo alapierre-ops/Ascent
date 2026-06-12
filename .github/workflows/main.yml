@@ -39,10 +39,10 @@ jobs:
           NODE_ENV: development
         run: npm ci --include=dev
       
-      - name: Generate Prisma client and migrate
+      - name: Generate Prisma client and push schema
         run: |
           npx prisma generate
-          npx prisma migrate deploy
+          npx prisma db push --accept-data-loss
       
       - name: Build Next.js app
         run: npm run build
