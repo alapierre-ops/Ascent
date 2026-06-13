@@ -22,6 +22,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { useOnboardingOptional } from '@/components/onboarding/OnboardingProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -36,6 +37,8 @@ import {
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 
+import { TUTORIAL_MISSION_CATEGORY } from '@/lib/onboarding/constants'
+import { ONBOARDING_TUTORIAL_READY_EVENT } from '@/lib/onboarding/events'
 import { cn } from '@/lib/utils'
 
 import { dashboardData } from '@/data/dashboard'
@@ -76,10 +79,10 @@ export default function DashboardPage() {
   const { user, overview, levels } = dashboardData
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(locale), [locale])
-  const topStreak = overview.streaks[0]
 
   const [levelsDialogOpen, setLevelsDialogOpen] = useState(false)
   const [streakModalOpen, setStreakModalOpen] = useState(false)
+  const [currentStreak, setCurrentStreak] = useState(0)
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   const [missions, setMissions] = useState<MissionForModal[]>([])
@@ -109,6 +112,9 @@ export default function DashboardPage() {
     xp: number
     currency: number
   } | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
+
+  const onboarding = useOnboardingOptional()
 
   const fetchMissions = useCallback(
     async (date?: string) => {
@@ -188,6 +194,9 @@ export default function DashboardPage() {
               setTimeout(() => setGoldGain(null), 2200)
             }
           }
+          if (onboarding?.tutorialMissionId === missionId) {
+            onboarding.signal('tutorial-completed')
+          }
           setJustCompletedMissionId(missionId)
           setTimeout(() => setJustCompletedMissionId(null), 1200)
           await fetchMissions()
@@ -196,7 +205,7 @@ export default function DashboardPage() {
         setCompletingId(null)
       }
     },
-    [fetchMissions, userStats?.level, userStats?.currency]
+    [fetchMissions, userStats?.level, userStats?.currency, onboarding]
   )
 
   const uncompleteMission = useCallback(
@@ -233,6 +242,7 @@ export default function DashboardPage() {
             currency: data.currency ?? 0,
           })
         if (data?.image !== undefined) setUserAvatar(data.image ?? null)
+        if (data?.name) setUserName(data.name)
       })
       .catch(() => {})
     return () => {
@@ -240,10 +250,30 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const openMissionModal = useCallback((mission: MissionForModal | null) => {
-    setMissionEditing(mission)
-    setMissionModalOpen(true)
-  }, [])
+  const openMissionModal = useCallback(
+    (mission: MissionForModal | null) => {
+      setMissionEditing(mission)
+      setMissionModalOpen(true)
+      if (
+        onboarding?.currentStep?.id === 'add-mission' &&
+        !mission &&
+        onboarding.active
+      ) {
+        onboarding.pause()
+      }
+    },
+    [onboarding]
+  )
+
+  const displayName = userName ?? user.name
+  const avatarInitials =
+    displayName
+      .split(' ')
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || user.avatarInitials
 
   const displayLevel = userStats?.level ?? user.level
   const displayXp = userStats?.xp ?? overview.summary.currentXP
@@ -282,6 +312,21 @@ export default function DashboardPage() {
     }
   }, [missions])
 
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/streak')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.currentStreak != null) {
+          setCurrentStreak(data.currentStreak)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [missions])
+
   const applyStarterPack = useCallback(async () => {
     setStarterLoading(true)
     try {
@@ -297,6 +342,20 @@ export default function DashboardPage() {
     }
   }, [fetchMissions, todayStr])
 
+  useEffect(() => {
+    const onTutorialReady = () => {
+      void fetchMissions(todayStr)
+      setSelectedDate(todayStr)
+    }
+    window.addEventListener(ONBOARDING_TUTORIAL_READY_EVENT, onTutorialReady)
+    return () => {
+      window.removeEventListener(
+        ONBOARDING_TUTORIAL_READY_EVENT,
+        onTutorialReady
+      )
+    }
+  }, [fetchMissions, todayStr])
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950">
       <div className="pointer-events-none absolute inset-0">
@@ -308,21 +367,25 @@ export default function DashboardPage() {
       <div className="relative z-10 p-4 md:p-6 lg:p-8">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 text-slate-50">
           {/* Player bar — mobile-game style: avatar + stats as icons only */}
-          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-500 text-white shadow-[0_12px_40px_rgba(88,28,135,0.4)]">
+          <Card
+            data-onboarding="player-bar"
+            className="relative overflow-hidden border-none bg-gradient-to-br from-indigo-600 via-purple-600 to-fuchsia-500 text-white shadow-[0_12px_40px_rgba(88,28,135,0.4)]"
+          >
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.25),transparent_50%)] opacity-90" />
             <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4">
               <button
                 type="button"
+                data-onboarding="avatar"
                 onClick={() => setAvatarPickerOpen(true)}
                 className="flex-shrink-0 transition-transform hover:scale-105 active:scale-95"
-                aria-label={t('welcome', { name: user.name })}
+                aria-label={t('welcome', { name: displayName })}
               >
                 <Avatar className="h-12 w-12 border-2 border-white/50 shadow-xl sm:h-14 sm:w-14">
                   {userAvatar && (
-                    <AvatarImage src={userAvatar} alt={user.name} />
+                    <AvatarImage src={userAvatar} alt={displayName} />
                   )}
                   <AvatarFallback className="bg-white/25 text-base font-bold text-white sm:text-lg">
-                    {user.avatarInitials}
+                    {avatarInitials}
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -335,6 +398,7 @@ export default function DashboardPage() {
                   <DialogTrigger asChild>
                     <button
                       type="button"
+                      data-onboarding="level"
                       className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
                       aria-label={`${t('overview.summary.level')} ${userStats?.level ?? overview.summary.level}`}
                     >
@@ -476,20 +540,22 @@ export default function DashboardPage() {
 
                 <button
                   type="button"
+                  data-onboarding="streak"
                   onClick={() => setStreakModalOpen(true)}
                   className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
                   title={t('overview.streaks.days', {
-                    count: topStreak?.days ?? 0,
+                    count: currentStreak,
                   })}
                 >
                   <Flame className="h-4 w-4 animate-pulse text-orange-200 sm:h-5 sm:w-5" />
                   <span className="text-lg font-bold sm:text-xl">
-                    {topStreak?.days ?? 0}
+                    {currentStreak}
                   </span>
                 </button>
 
                 <Link
                   href={`/${locale}/shop`}
+                  data-onboarding="gold"
                   className="relative flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
                   title={t('overview.summary.gold')}
                 >
@@ -515,7 +581,7 @@ export default function DashboardPage() {
           </Card>
 
           {/* Missions — main landing content with day navigation */}
-          <section className="space-y-4">
+          <section data-onboarding="missions" className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <button
@@ -541,6 +607,7 @@ export default function DashboardPage() {
                 </button>
               </div>
               <Button
+                data-onboarding="add-mission"
                 className="w-full shrink-0 gap-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 text-white shadow-lg transition hover:opacity-95 sm:w-auto"
                 onClick={() => openMissionModal(null)}
               >
@@ -595,7 +662,10 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {isTodaySelected && (
-                  <Card className="border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+                  <Card
+                    data-onboarding="daily-quest"
+                    className="border border-white/10 bg-white/[0.04] backdrop-blur-xl"
+                  >
                     <CardContent className="space-y-3 py-4">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-white">
@@ -650,6 +720,9 @@ export default function DashboardPage() {
                 {missions.map((mission) => {
                   const Icon = missionIconMap[mission.type] ?? Sparkles
                   const isCompleted = mission.status === 'COMPLETED'
+                  const isTutorial =
+                    mission.category === TUTORIAL_MISSION_CATEGORY ||
+                    mission.id === onboarding?.tutorialMissionId
                   const isOverdue =
                     !isCompleted &&
                     (mission.status === 'OVERDUE' ||
@@ -658,6 +731,9 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={mission.id}
+                      data-onboarding={
+                        isTutorial ? 'tutorial-mission' : undefined
+                      }
                       className={cn(
                         'relative flex w-full items-center gap-3 rounded-xl border p-4 transition-all duration-300',
                         justCompletedMissionId === mission.id &&
@@ -673,6 +749,9 @@ export default function DashboardPage() {
                       {!isCompleted ? (
                         <button
                           type="button"
+                          data-onboarding={
+                            isTutorial ? 'tutorial-complete' : undefined
+                          }
                           onClick={(e) => {
                             e.stopPropagation()
                             completeMission(mission.id)
@@ -769,7 +848,7 @@ export default function DashboardPage() {
         open={avatarPickerOpen}
         onOpenChange={setAvatarPickerOpen}
         currentAvatar={userAvatar}
-        currentInitials={user.avatarInitials}
+        currentInitials={avatarInitials}
         userLevel={userStats?.level ?? user.level}
         onAvatarSelect={async (url) => {
           setUserAvatar(url)
@@ -782,12 +861,31 @@ export default function DashboardPage() {
         onSignOut={() => signOut({ callbackUrl: `/${locale}` })}
         signOutLabel={t('profile.actions.signOut')}
       />
-      <StreakModal open={streakModalOpen} onOpenChange={setStreakModalOpen} />
+      <StreakModal
+        open={streakModalOpen}
+        onOpenChange={setStreakModalOpen}
+        onStreakChange={setCurrentStreak}
+      />
       <MissionModal
         open={missionModalOpen}
-        onOpenChange={setMissionModalOpen}
+        onOpenChange={(open) => {
+          setMissionModalOpen(open)
+          if (!open && onboarding?.paused) {
+            onboarding.resume()
+          }
+        }}
         mission={missionEditing}
-        onSuccess={fetchMissions}
+        onSuccess={() => {
+          void fetchMissions()
+          if (
+            onboarding?.active &&
+            onboarding.currentStep?.id === 'add-mission' &&
+            !missionEditing
+          ) {
+            onboarding.signal('mission-created')
+            onboarding.resume()
+          }
+        }}
       />
 
       {/* Level up celebration */}

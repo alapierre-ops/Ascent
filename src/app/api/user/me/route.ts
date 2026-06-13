@@ -18,6 +18,7 @@ export async function GET() {
         level: true,
         xp: true,
         currency: true,
+        onboardingCompletedAt: true,
       },
     })
     if (!user) {
@@ -30,6 +31,7 @@ export async function GET() {
       level: user.level,
       xp: user.xp,
       currency: user.currency,
+      onboardingCompleted: user.onboardingCompletedAt != null,
     })
   } catch (error) {
     console.error('User me GET error:', error)
@@ -57,16 +59,22 @@ export async function PATCH(request: NextRequest) {
             ? body.image
             : undefined
 
-    if (image === undefined) {
+    const markOnboardingComplete = body.onboardingCompleted === true
+
+    if (image === undefined && !markOnboardingComplete) {
       return NextResponse.json(
         { error: 'Invalid body: image must be a string or null' },
         { status: 400 }
       )
     }
 
+    const data: { image?: string | null; onboardingCompletedAt?: Date } = {}
+    if (image !== undefined) data.image = image
+    if (markOnboardingComplete) data.onboardingCompletedAt = new Date()
+
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { image },
+      data,
     })
 
     return NextResponse.json({ ok: true })

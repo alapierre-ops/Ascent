@@ -35,6 +35,32 @@ const atDayOffset = (dayOffset: number, hour: number, minute = 0) => {
   return date
 }
 
+function getMissionStatus(
+  dayOffset: number,
+  template: { type: MissionType; hour: number }
+): MissionStatus {
+  if (dayOffset > 0) return MissionStatus.SCHEDULED
+
+  if (dayOffset === 0) {
+    return template.hour <= 10
+      ? MissionStatus.COMPLETED
+      : MissionStatus.SCHEDULED
+  }
+
+  // Recent streak window: at least one habit completed each day.
+  if (dayOffset >= -5) {
+    if (template.type === MissionType.HABIT) return MissionStatus.COMPLETED
+    return dayOffset >= -2 ? MissionStatus.COMPLETED : MissionStatus.OVERDUE
+  }
+
+  // Older days: scattered activity for calendar history.
+  const abs = Math.abs(dayOffset)
+  const dayHasActivity = abs % 2 === 0 || abs % 3 === 0
+  if (!dayHasActivity) return MissionStatus.OVERDUE
+  if (template.type === MissionType.HABIT) return MissionStatus.COMPLETED
+  return abs % 4 === 0 ? MissionStatus.COMPLETED : MissionStatus.OVERDUE
+}
+
 async function main() {
   console.log('🌱 Démarrage du seeder...')
 
@@ -186,24 +212,10 @@ async function main() {
 
     const missionData: Prisma.MissionCreateManyInput[] = []
     for (const recipientId of missionRecipientIds) {
-      for (let dayOffset = -6; dayOffset <= 6; dayOffset++) {
+      for (let dayOffset = -35; dayOffset <= 6; dayOffset++) {
         for (const template of missionTemplates) {
           const dueAt = atDayOffset(dayOffset, template.hour, 0)
-          let status: MissionStatus = MissionStatus.SCHEDULED
-
-          if (dayOffset < -1) {
-            status =
-              template.type === MissionType.HABIT
-                ? MissionStatus.COMPLETED
-                : MissionStatus.OVERDUE
-          } else if (dayOffset === -1) {
-            status =
-              template.type === MissionType.HABIT
-                ? MissionStatus.COMPLETED
-                : MissionStatus.SCHEDULED
-          } else if (dayOffset === 0 && template.hour <= 10) {
-            status = MissionStatus.COMPLETED
-          }
+          const status = getMissionStatus(dayOffset, template)
 
           missionData.push({
             userId: recipientId,

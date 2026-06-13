@@ -1,11 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useTranslations } from 'next-intl'
 
 import {
   CalendarDays,
+  Check,
   ChevronLeft,
   ChevronRight,
   Flame,
@@ -25,26 +26,67 @@ import { Progress } from '@/components/ui/progress'
 
 import { cn } from '@/lib/utils'
 
-const DEMO_STREAK_DAYS = 3
-const DEMO_GOAL_DAYS = 7
-const DEMO_ACTIVE_DAY_INDICES = new Set([
-  1, 2, 3, 5, 8, 12, 15, 18, 20, 22, 23, 24,
-])
+type StreakData = {
+  currentStreak: number
+  goalDays: number
+  activeDays: number[]
+  monthActiveDays: number
+  monthLongestStreak: number
+  avatarObjectives: {
+    level: number
+    avatarCount: number
+    unlocked: boolean
+  }[]
+  userLevel: number
+}
 
 type StreakModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onStreakChange?: (streak: number) => void
 }
 
 const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
-export function StreakModal({ open, onOpenChange }: StreakModalProps) {
+export function StreakModal({
+  open,
+  onOpenChange,
+  onStreakChange,
+}: StreakModalProps) {
   const t = useTranslations('dashboard.streakModal')
   const weekdayLabels = useMemo(
     () => WEEKDAY_KEYS.map((key) => t(`weekdays.${key}`)),
     [t]
   )
   const [viewDate, setViewDate] = useState(() => new Date())
+  const [streakData, setStreakData] = useState<StreakData | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+
+    let cancelled = false
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true)
+
+    fetch(
+      `/api/streak?year=${viewDate.getFullYear()}&month=${viewDate.getMonth()}`
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: StreakData | null) => {
+        if (cancelled || !data) return
+        setStreakData(data)
+        onStreakChange?.(data.currentStreak)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open, viewDate, onStreakChange])
 
   const {
     monthLabel,
@@ -66,47 +108,16 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
     const today = new Date()
     const isViewingCurrentMonth =
       today.getFullYear() === year && today.getMonth() === month
-    const isViewingFutureMonth =
-      year > today.getFullYear() ||
-      (year === today.getFullYear() && month > today.getMonth())
     const todayDate = today.getDate()
-
-    const maxDayToConsider = isViewingFutureMonth
-      ? 0
-      : isViewingCurrentMonth
-        ? todayDate
-        : lastDay
-
-    const activeDayNumbers: number[] = []
-    for (let d = 1; d <= maxDayToConsider; d++) {
-      if (DEMO_ACTIVE_DAY_INDICES.has(d)) activeDayNumbers.push(d)
-    }
-
-    let longestStreak = 0
-    if (activeDayNumbers.length > 0) {
-      activeDayNumbers.sort((a, b) => a - b)
-      let run = 1
-      for (let i = 1; i < activeDayNumbers.length; i++) {
-        if (activeDayNumbers[i] === activeDayNumbers[i - 1] + 1) run++
-        else {
-          longestStreak = Math.max(longestStreak, run)
-          run = 1
-        }
-      }
-      longestStreak = Math.max(longestStreak, run)
-    }
+    const activeDaySet = new Set(streakData?.activeDays ?? [])
 
     const days: { day: number; active: boolean; isToday: boolean }[] = []
     for (let d = 1; d <= lastDay; d++) {
-      const isCurrentMonth =
-        today.getFullYear() === year && today.getMonth() === month
       const isAfterToday = isViewingCurrentMonth && d > todayDate
-      const active =
-        !isAfterToday && !isViewingFutureMonth && DEMO_ACTIVE_DAY_INDICES.has(d)
       days.push({
         day: d,
-        active,
-        isToday: isCurrentMonth && todayDate === d,
+        active: !isAfterToday && activeDaySet.has(d),
+        isToday: isViewingCurrentMonth && todayDate === d,
       })
     }
 
@@ -114,10 +125,10 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
       monthLabel,
       days,
       startOffset,
-      totalActiveDays: activeDayNumbers.length,
-      longestStreakInMonth: longestStreak,
+      totalActiveDays: streakData?.monthActiveDays ?? 0,
+      longestStreakInMonth: streakData?.monthLongestStreak ?? 0,
     }
-  }, [viewDate])
+  }, [viewDate, streakData])
 
   const goPrevMonth = () => {
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() - 1))
@@ -126,10 +137,9 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() + 1))
   }
 
-  const progressPercent = Math.min(
-    100,
-    (DEMO_STREAK_DAYS / DEMO_GOAL_DAYS) * 100
-  )
+  const currentStreak = streakData?.currentStreak ?? 0
+  const goalDays = streakData?.goalDays ?? 7
+  const progressPercent = Math.min(100, (currentStreak / goalDays) * 100)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -148,7 +158,7 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
             <span className="hidden sm:inline">{t('share')}</span>
           </Button>
           <DialogTitle className="sr-only">
-            {t('streakTitle', { count: DEMO_STREAK_DAYS })}
+            {t('streakTitle', { count: currentStreak })}
           </DialogTitle>
           <Button
             variant="ghost"
@@ -162,17 +172,17 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
         </DialogHeader>
 
         <div className="flex flex-col gap-6 overflow-y-auto px-4 pt-4 pb-6">
-          {/* Block 1: Flame + streak title */}
           <div className="flex items-center gap-4 rounded-2xl bg-white/5 p-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 shadow-lg">
               <Flame className="h-9 w-9 animate-pulse text-white" />
             </div>
             <p className="text-xl font-bold text-white">
-              {t('streakTitle', { count: DEMO_STREAK_DAYS })}
+              {loading
+                ? t('loading')
+                : t('streakTitle', { count: currentStreak })}
             </p>
           </div>
 
-          {/* Month stats (only up to today) — mobile-game style */}
           <div className="grid grid-cols-2 gap-3">
             <div className="relative overflow-hidden rounded-2xl border border-orange-500/30 bg-gradient-to-br from-orange-500/20 to-amber-500/10 p-3 shadow-[0_0_20px_rgba(249,115,22,0.15)]">
               <div className="absolute -top-2 -right-2 h-12 w-12 rounded-full bg-orange-400/20 blur-md" />
@@ -214,7 +224,6 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
             </div>
           </div>
 
-          {/* Block 2: Calendar */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <button
@@ -268,15 +277,14 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
             </div>
           </div>
 
-          {/* Block 3: Streak goal + lock */}
           <div className="space-y-3 rounded-2xl bg-white/5 p-4">
             <p className="text-sm font-semibold text-white">{t('goalTitle')}</p>
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs text-white/70">
                 <span>
                   {t('goalProgress', {
-                    current: DEMO_STREAK_DAYS,
-                    target: DEMO_GOAL_DAYS,
+                    current: currentStreak,
+                    target: goalDays,
                   })}
                 </span>
                 <span>{Math.round(progressPercent)}%</span>
@@ -286,6 +294,47 @@ export function StreakModal({ open, onOpenChange }: StreakModalProps) {
             <div className="flex items-start gap-2 text-xs text-white/60">
               <Lock className="h-4 w-4 shrink-0 text-amber-400/80" />
               <p>{t('goalUnlock')}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3 rounded-2xl bg-white/5 p-4">
+            <p className="text-sm font-semibold text-white">
+              {t('avatarObjectivesTitle')}
+            </p>
+            <div className="space-y-2">
+              {(streakData?.avatarObjectives ?? []).map((objective) => (
+                <div
+                  key={objective.level}
+                  className={cn(
+                    'flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5',
+                    objective.unlocked
+                      ? 'border-emerald-400/40 bg-emerald-500/10'
+                      : 'border-white/10 bg-white/[0.03]'
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-white">
+                      {t('avatarObjectiveTitle', { level: objective.level })}
+                    </p>
+                    <p className="text-xs text-white/60">
+                      {t('avatarObjectiveDescription', {
+                        count: objective.avatarCount,
+                      })}
+                    </p>
+                  </div>
+                  {objective.unlocked ? (
+                    <Check className="h-5 w-5 shrink-0 text-emerald-300" />
+                  ) : (
+                    <div className="flex shrink-0 items-center gap-1 text-xs text-white/60">
+                      <Lock className="h-4 w-4 text-amber-400/80" />
+                      {t('avatarObjectiveLocked', {
+                        level: objective.level,
+                        current: streakData?.userLevel ?? 1,
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>

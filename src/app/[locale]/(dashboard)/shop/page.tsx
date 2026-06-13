@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { useOnboardingOptional } from '@/components/onboarding/OnboardingProvider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -60,6 +61,8 @@ export default function ShopPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+
+  const onboarding = useOnboardingOptional()
 
   const loadRewardsData = async () => {
     await fetch('/api/rewards')
@@ -143,6 +146,9 @@ export default function ShopPage() {
       setIcon('🎁')
       setMessage(t('createSuccess'))
       await loadRewardsData()
+      if (onboarding?.active) {
+        onboarding.signal('reward-created')
+      }
     } finally {
       setCreating(false)
     }
@@ -229,6 +235,7 @@ export default function ShopPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href={`/${locale}/dashboard`}
+              data-onboarding="back-dashboard"
               className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -332,7 +339,10 @@ export default function ShopPage() {
                 {t('customDescription')}
               </p>
             </div>
-            <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
+            <Card
+              data-onboarding="create-reward"
+              className="border-white/10 bg-white/[0.04] backdrop-blur-xl"
+            >
               <CardContent className="grid gap-3 p-4 sm:grid-cols-3">
                 <Input
                   value={title}

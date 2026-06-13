@@ -348,10 +348,15 @@
     },
     "streakModal": {
       "share": "Partager",
+      "loading": "Chargement...",
       "streakTitle": "Série de {count} jours !",
       "goalTitle": "Objectif de streak",
       "goalProgress": "{current} / {target} jours",
       "goalUnlock": "Atteins une série de 7 jours pour débloquer des récompenses exclusives.",
+      "avatarObjectivesTitle": "Objectifs avatars",
+      "avatarObjectiveTitle": "Niveau {level}",
+      "avatarObjectiveDescription": "Débloque {count} avatars exclusifs",
+      "avatarObjectiveLocked": "Niv. {current} / {level}",
       "monthLongestStreak": "Plus longue série",
       "monthActiveDays": "Jours actifs",
       "daysUnit": "jours",
@@ -453,6 +458,73 @@
         "title": "Objet wishlist",
         "description": "Le gros achat plaisir que tu reportes depuis longtemps"
       }
+    }
+  },
+  "onboarding": {
+    "progress": "{current} / {total}",
+    "next": "Suivant",
+    "skip": "Passer le tutoriel",
+    "welcome": {
+      "title": "Bienvenue sur Ascent !",
+      "body": "Faisons un rapide tour d'horizon et configurons tes premières missions. Ça ne prend que quelques minutes.",
+      "cta": "C'est parti"
+    },
+    "playerBar": {
+      "title": "Ton centre de commande",
+      "body": "Toute ta progression est ici — profil, niveau, série et or."
+    },
+    "avatar": {
+      "title": "Ton avatar",
+      "body": "Appuie ici pour changer ton look. De nouveaux avatars se débloquent en montant de niveau."
+    },
+    "level": {
+      "title": "Ton niveau",
+      "body": "Termine des missions pour gagner de l'XP et monter de niveau. Chaque niveau rapporte de l'or."
+    },
+    "streak": {
+      "title": "Ta série",
+      "body": "Termine au moins une mission par jour pour construire ta série. La régularité, c'est la clé !"
+    },
+    "gold": {
+      "title": "Ton or",
+      "body": "L'or est gagné quand tu montes de niveau. Dépense-le dans la boutique sur des récompenses que tu te fixes."
+    },
+    "missions": {
+      "title": "Missions du jour",
+      "body": "C'est ici que vivent tes habitudes et objectifs. Chaque jour, tu vois ce qui est prévu."
+    },
+    "tutorialMission": {
+      "title": "Ta mission tutoriel",
+      "body": "On t'a ajouté une mission « Terminer le tutoriel ». Tu la compléteras à la toute fin pour voir comment l'XP et l'or fonctionnent."
+    },
+    "addMission": {
+      "title": "Crée ta première mission",
+      "body": "À ton tour — appuie ici et ajoute une habitude ou un objectif qui compte pour toi."
+    },
+    "dailyQuest": {
+      "title": "Quête quotidienne",
+      "body": "Termine 5 missions en une journée pour remplir cette barre. C'est un défi bonus en plus de tes missions habituelles."
+    },
+    "shopNav": {
+      "title": "Visite la boutique",
+      "body": "Appuie sur ton solde d'or pour ouvrir la boutique — c'est là que tu crées des récompenses sur lesquelles dépenser ton or."
+    },
+    "createReward": {
+      "title": "Crée une récompense perso",
+      "body": "Nomme quelque chose que tu aimerais — un plaisir, une activité, un achat — et fixe son coût en or."
+    },
+    "backDashboard": {
+      "title": "Retour aux missions",
+      "body": "Retourne au tableau de bord. Une dernière chose t'attend : terminer ta mission tutoriel."
+    },
+    "completeTutorial": {
+      "title": "Termine ta mission tutoriel",
+      "body": "Appuie sur la coche de « Terminer le tutoriel » pour la compléter. Regarde ton XP et ton or augmenter !"
+    },
+    "done": {
+      "title": "Tu es prêt !",
+      "body": "Tu sais comment fonctionnent les missions, l'XP, l'or et les récompenses. Maintenant, vise le sommet !",
+      "cta": "Commencer l'ascension"
     }
   }
 }

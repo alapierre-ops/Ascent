@@ -348,10 +348,15 @@
     },
     "streakModal": {
       "share": "Share",
+      "loading": "Loading...",
       "streakTitle": "{count}-day streak!",
       "goalTitle": "Streak goal",
       "goalProgress": "{current} / {target} days",
       "goalUnlock": "Reach a 7-day streak to unlock exclusive rewards.",
+      "avatarObjectivesTitle": "Avatar objectives",
+      "avatarObjectiveTitle": "Level {level}",
+      "avatarObjectiveDescription": "Unlock {count} exclusive avatars",
+      "avatarObjectiveLocked": "Lv. {current} / {level}",
       "monthLongestStreak": "Longest streak",
       "monthActiveDays": "Active days",
       "daysUnit": "days",
@@ -453,6 +458,73 @@
         "title": "Wishlist splurge",
         "description": "That bigger treat you've delayed for too long"
       }
+    }
+  },
+  "onboarding": {
+    "progress": "{current} / {total}",
+    "next": "Next",
+    "skip": "Skip tour",
+    "welcome": {
+      "title": "Welcome to Ascent!",
+      "body": "Let's take a quick tour and set up your first missions. It only takes a few minutes.",
+      "cta": "Let's go"
+    },
+    "playerBar": {
+      "title": "Your command center",
+      "body": "Everything about your progress lives up here — profile, level, streak, and gold."
+    },
+    "avatar": {
+      "title": "Your avatar",
+      "body": "Tap here anytime to change your look. New avatars unlock as you level up."
+    },
+    "level": {
+      "title": "Your level",
+      "body": "Complete missions to earn XP and climb levels. Each level unlocks gold rewards."
+    },
+    "streak": {
+      "title": "Your streak",
+      "body": "Complete at least one mission per day to build your streak. Consistency is key!"
+    },
+    "gold": {
+      "title": "Your gold",
+      "body": "Gold is earned when you level up. Spend it in the shop on real-life rewards you set for yourself."
+    },
+    "missions": {
+      "title": "Daily missions",
+      "body": "This is where your habits and goals live. Each day you see what's scheduled for today."
+    },
+    "tutorialMission": {
+      "title": "Your tutorial mission",
+      "body": "We've added a \"Finish tutorial\" mission for you. You'll complete it at the very end to see how XP and gold work."
+    },
+    "addMission": {
+      "title": "Create your first mission",
+      "body": "Now it's your turn — tap here and add a habit or goal that's meaningful to you."
+    },
+    "dailyQuest": {
+      "title": "Daily quest",
+      "body": "Complete 5 missions in a day to fill this bar. It's a bonus challenge on top of your regular missions."
+    },
+    "shopNav": {
+      "title": "Visit the shop",
+      "body": "Tap your gold balance to open the shop — that's where you create rewards to spend your gold on."
+    },
+    "createReward": {
+      "title": "Create a personal reward",
+      "body": "Name something you'd enjoy — a treat, activity, or purchase — and set how much gold it costs."
+    },
+    "backDashboard": {
+      "title": "Back to your missions",
+      "body": "Head back to the dashboard. One last thing awaits: completing your tutorial mission."
+    },
+    "completeTutorial": {
+      "title": "Complete your tutorial mission",
+      "body": "Tap the checkmark on \"Finish tutorial\" to complete it. Watch your XP and gold go up!"
+    },
+    "done": {
+      "title": "You're all set!",
+      "body": "You know how missions, XP, gold, and rewards work. Now go crush your goals!",
+      "cta": "Start climbing"
     }
   }
 }

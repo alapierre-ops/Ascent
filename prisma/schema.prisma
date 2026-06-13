@@ -18,6 +18,7 @@ model User {
   emailVerified        Boolean   @default(false)
   verificationToken    String?   @unique
   createdAt     DateTime  @default(now())
+  onboardingCompletedAt DateTime?
   
   // --- GAMIFICATION (MVP) ---
   level         Int       @default(1)
