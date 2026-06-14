@@ -92,12 +92,13 @@ export function OnboardingProvider({
 
   const signal = useCallback(
     (event: OnboardingAdvanceEvent) => {
-      if (!active || !currentStep || paused) return
+      if (!active || !currentStep) return
       if (currentStep.advanceOn !== event) return
       if (event === 'next') return
+      setPaused(false)
       goToNextStep()
     },
-    [active, currentStep, paused, goToNextStep]
+    [active, currentStep, goToNextStep]
   )
 
   const skip = useCallback(() => {
@@ -155,6 +156,7 @@ export function OnboardingProvider({
       currentStep.advanceOn === 'navigate-dashboard' &&
       currentRoute === 'dashboard'
     ) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       const id = window.setTimeout(() => goToNextStep(), 0)
       return () => window.clearTimeout(id)
     }

@@ -36,6 +36,7 @@ model User {
   rewards       UserReward[]
   badges        UserBadge[]
   missions      Mission[]
+  pendingRewards PendingReward[]
   
   // Relation Sociale (Self-referencing many-to-many pour les amis)
   followedBy    UserFollows[] @relation("following")
@@ -74,6 +75,28 @@ model Mission {
   dueAt     DateTime      // date + heure d’échéance
   status    MissionStatus @default(SCHEDULED)
   createdAt DateTime      @default(now())
+}
+
+enum PendingRewardType {
+  LEVEL_UP
+  DAILY_QUEST
+  DAILY_LOGIN
+}
+
+model PendingReward {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      PendingRewardType
+  refLevel  Int?
+  refDate   String?
+  gold      Int               @default(0)
+  xp        Int               @default(0)
+  claimedAt DateTime?
+  createdAt DateTime          @default(now())
+
+  @@unique([userId, type, refLevel])
+  @@unique([userId, type, refDate])
 }
 
 // Legacy v1: Habit + HabitLog. Mission is the v2 model for daily tasks on the dashboard.

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+import { toBcp47Locale } from '@/lib/locale'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = [
@@ -34,25 +35,25 @@ const CATEGORIES = [
 
 const QUICK_TEMPLATES = [
   {
-    title: 'Hydrate (8 glasses)',
+    id: 'hydrate',
     category: 'Health',
     type: 'HABIT' as const,
     xp: 20,
   },
   {
-    title: '30 min workout',
+    id: 'workout',
     category: 'Fitness',
     type: 'HABIT' as const,
     xp: 45,
   },
   {
-    title: 'Deep work sprint (45 min)',
+    id: 'deepWork',
     category: 'Productivity',
     type: 'GOAL' as const,
     xp: 60,
   },
   {
-    title: 'Read 20 minutes',
+    id: 'read',
     category: 'Learning',
     type: 'HABIT' as const,
     xp: 30,
@@ -88,7 +89,7 @@ function formatTimeForDisplay(dateTimeLocal: string, locale: string): string {
     const m = d.getMinutes()
     return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
   }
-  return d.toLocaleTimeString(locale, {
+  return d.toLocaleTimeString(toBcp47Locale(locale), {
     hour: 'numeric',
     minute: d.getMinutes() ? '2-digit' : undefined,
     hour12: true,
@@ -119,7 +120,7 @@ function formatDueFriendly(
   if (dueDate.getTime() === tomorrow.getTime()) {
     return t('dueFriendlyTomorrow', { time })
   }
-  const date = d.toLocaleDateString(locale, {
+  const date = d.toLocaleDateString(toBcp47Locale(locale), {
     day: 'numeric',
     month: 'short',
     year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
@@ -132,6 +133,7 @@ type MissionModalProps = {
   onOpenChange: (open: boolean) => void
   mission: MissionForModal | null
   onSuccess: () => void
+  onCreated?: () => void
 }
 
 export function MissionModal({
@@ -139,11 +141,13 @@ export function MissionModal({
   onOpenChange,
   mission,
   onSuccess,
+  onCreated,
 }: MissionModalProps) {
   const locale = useLocale()
   const t = useTranslations('dashboard.overview.missionModal')
   const tMissions = useTranslations('dashboard.overview.missions')
   const isEdit = !!mission
+  const inputLang = locale.startsWith('fr') ? 'fr-FR' : 'en'
 
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
@@ -233,6 +237,7 @@ export function MissionModal({
           const data = await res.json().catch(() => ({}))
           throw new Error(data.error || 'Failed to create')
         }
+        onCreated?.()
       }
       onSuccess()
       onOpenChange(false)
@@ -287,14 +292,15 @@ export function MissionModal({
               <div className="flex flex-wrap gap-2 pt-1">
                 {QUICK_TEMPLATES.map((template) => (
                   <button
-                    key={template.title}
+                    key={template.id}
                     type="button"
                     className="rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-xs text-white/80 transition hover:bg-white/10"
                     onClick={() => {
-                      setTitle(template.title)
+                      setTitle(t(`templates.${template.id}`))
                       setCategory(template.category)
                       setType(template.type)
                       setXp(template.xp)
+                      setRepeat(template.type === 'HABIT' ? 'DAILY' : 'NONE')
                       setDifficulty(
                         template.xp >= 60
                           ? 'hard'
@@ -304,7 +310,7 @@ export function MissionModal({
                       )
                     }}
                   >
-                    {template.title}
+                    {t(`templates.${template.id}`)}
                   </button>
                 ))}
               </div>
@@ -341,7 +347,13 @@ export function MissionModal({
             <Label>{t('typeLabel')}</Label>
             <Select
               value={type}
-              onValueChange={(v) => setType(v as 'HABIT' | 'GOAL')}
+              onValueChange={(v) => {
+                const nextType = v as 'HABIT' | 'GOAL'
+                setType(nextType)
+                if (!isEdit) {
+                  setRepeat(nextType === 'HABIT' ? 'DAILY' : 'NONE')
+                }
+              }}
             >
               <SelectTrigger className="w-full border-white/20 bg-white/10 text-white">
                 <SelectValue />
@@ -366,9 +378,12 @@ export function MissionModal({
                 </SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-white/60">
+              {type === 'HABIT' ? t('typeHintHabit') : t('typeHintGoal')}
+            </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="mission-xp">{t('xpLabel')}</Label>
+            <Label htmlFor="mission-xp">{t('difficultyLabel')}</Label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { key: 'easy', value: 20, label: t('difficultyEasy') },
@@ -431,6 +446,7 @@ export function MissionModal({
                 <Input
                   id="mission-due-date"
                   type="date"
+                  lang={inputLang}
                   value={dueDatePart}
                   onChange={(e) => setDueFromParts(e.target.value, dueTimePart)}
                   required
@@ -439,6 +455,7 @@ export function MissionModal({
                 <Input
                   id="mission-due-time"
                   type="time"
+                  lang={inputLang}
                   value={dueTimePart}
                   onChange={(e) => setDueFromParts(dueDatePart, e.target.value)}
                   required

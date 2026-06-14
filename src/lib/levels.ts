@@ -1,6 +1,6 @@
 /**
- * Level thresholds and rewards — used server-side for XP/level/gold when completing missions.
- * Must stay in sync with dashboard data for display.
+ * Level thresholds and rewards — used server-side for XP/level when completing missions.
+ * Gold from levels is granted only when the user claims pending rewards.
  */
 export const LEVELS = [
   { level: 1, xpRequired: 0, reward: { gold: 15 } },
@@ -33,37 +33,50 @@ export function getNextLevel(level: number) {
   return LEVELS.find((l) => l.level === level + 1)
 }
 
+export function getLevelFromXp(totalXp: number): number {
+  const clampedXp = Math.max(0, totalXp)
+  let level = 1
+  let next = getNextLevel(level)
+  while (next && clampedXp >= next.xpRequired) {
+    level = next.level
+    next = getNextLevel(level)
+  }
+  return level
+}
+
+/** Apply XP and return new level + any newly reached levels (for pending rewards). */
+export function applyXpAndLevelOnly(
+  currentXp: number,
+  currentLevel: number,
+  xpToAdd: number
+): { xp: number; level: number; newLevels: number[] } {
+  const xp = currentXp + xpToAdd
+  let level = currentLevel
+  const newLevels: number[] = []
+  let next = getNextLevel(level)
+  while (next && xp >= next.xpRequired) {
+    level = next.level
+    newLevels.push(level)
+    next = getNextLevel(level)
+  }
+  return { xp, level, newLevels }
+}
+
+/** @deprecated Gold is now claim-based. Kept for cheats/seed scripts. */
 export function applyXpAndLevelUp(
   currentXp: number,
   currentLevel: number,
   currentCurrency: number,
   xpToAdd: number
 ): { xp: number; level: number; currency: number } {
-  const xp = currentXp + xpToAdd
-  let level = currentLevel
-  let currency = currentCurrency
-  let next = getNextLevel(level)
-  while (next && xp >= next.xpRequired) {
-    level = next.level
-    currency += next.reward.gold
-    next = getNextLevel(level)
-  }
-  return { xp, level, currency }
+  const { xp, level } = applyXpAndLevelOnly(currentXp, currentLevel, xpToAdd)
+  return { xp, level, currency: currentCurrency }
 }
 
-/** Recompute level and total currency from total XP (e.g. when uncompleting a mission). */
+/** @deprecated */
 export function getLevelAndCurrencyFromXp(totalXp: number): {
   level: number
   currency: number
 } {
-  const clampedXp = Math.max(0, totalXp)
-  let level = 1
-  let currency = 0
-  let next = getNextLevel(level)
-  while (next && clampedXp >= next.xpRequired) {
-    level = next.level
-    currency += next.reward.gold
-    next = getNextLevel(level)
-  }
-  return { level, currency }
+  return { level: getLevelFromXp(totalXp), currency: 0 }
 }

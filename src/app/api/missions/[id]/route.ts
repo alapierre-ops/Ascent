@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
-import { applyXpAndLevelUp, getLevelAndCurrencyFromXp } from '@/lib/levels'
+import { DAILY_QUEST_TARGET } from '@/lib/daily-quest'
+import { applyXpAndLevelOnly, getLevelFromXp } from '@/lib/levels'
+import {
+  createLevelUpRewards,
+  maybeCreateDailyQuestReward,
+  maybeRevokeDailyQuestReward,
+  pruneStaleLevelRewards,
+} from '@/lib/pending-rewards-service'
 import { prisma } from '@/lib/prisma'
 import { updateMissionSchema } from '@/lib/validation/mission'
 
@@ -46,23 +53,33 @@ export async function PATCH(
     })
 
     let updatedUser: { level: number; xp: number; currency: number } | undefined
+    let newLevelRewards = 0
+
     if (parsed.data.status === 'COMPLETED') {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { xp: true, level: true, currency: true },
       })
       if (user) {
-        const { xp, level, currency } = applyXpAndLevelUp(
+        const { xp, level, newLevels } = applyXpAndLevelOnly(
           user.xp,
           user.level,
-          user.currency,
           mission.xp
         )
         await prisma.user.update({
           where: { id: session.user.id },
-          data: { xp, level, currency },
+          data: { xp, level },
         })
-        updatedUser = { level, xp, currency }
+        if (newLevels.length > 0) {
+          await createLevelUpRewards(prisma, session.user.id, newLevels)
+          newLevelRewards = newLevels.length
+        }
+        await maybeCreateDailyQuestReward(
+          prisma,
+          session.user.id,
+          DAILY_QUEST_TARGET
+        )
+        updatedUser = { level, xp, currency: user.currency }
       }
     } else if (parsed.data.status === 'SCHEDULED') {
       const user = await prisma.user.findUnique({
@@ -71,12 +88,18 @@ export async function PATCH(
       })
       if (user) {
         const newXp = Math.max(0, user.xp - mission.xp)
-        const { level, currency } = getLevelAndCurrencyFromXp(newXp)
+        const level = getLevelFromXp(newXp)
         await prisma.user.update({
           where: { id: session.user.id },
-          data: { xp: newXp, level, currency },
+          data: { xp: newXp, level },
         })
-        updatedUser = { level, xp: newXp, currency }
+        await pruneStaleLevelRewards(prisma, session.user.id, level)
+        await maybeRevokeDailyQuestReward(
+          prisma,
+          session.user.id,
+          DAILY_QUEST_TARGET
+        )
+        updatedUser = { level, xp: newXp, currency: user.currency }
       }
     }
 
@@ -89,6 +112,7 @@ export async function PATCH(
       dueAt: mission.dueAt.toISOString(),
       status: mission.status,
       user: updatedUser,
+      newLevelRewards,
     })
   } catch (error) {
     console.error('Mission PATCH error:', error)

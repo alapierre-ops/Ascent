@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 
 import {
   CalendarDays,
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 
+import { toBcp47Locale } from '@/lib/locale'
 import { cn } from '@/lib/utils'
 
 type StreakData = {
@@ -54,6 +55,7 @@ export function StreakModal({
   onStreakChange,
 }: StreakModalProps) {
   const t = useTranslations('dashboard.streakModal')
+  const locale = useLocale()
   const weekdayLabels = useMemo(
     () => WEEKDAY_KEYS.map((key) => t(`weekdays.${key}`)),
     [t]
@@ -101,7 +103,7 @@ export function StreakModal({
     const last = new Date(year, month + 1, 0)
     const lastDay = last.getDate()
     const startOffset = (first.getDay() + 6) % 7
-    const monthLabel = viewDate.toLocaleDateString(undefined, {
+    const monthLabel = viewDate.toLocaleDateString(toBcp47Locale(locale), {
       month: 'long',
       year: 'numeric',
     })
@@ -128,7 +130,7 @@ export function StreakModal({
       totalActiveDays: streakData?.monthActiveDays ?? 0,
       longestStreakInMonth: streakData?.monthLongestStreak ?? 0,
     }
-  }, [viewDate, streakData])
+  }, [viewDate, streakData, locale])
 
   const goPrevMonth = () => {
     setViewDate((d) => new Date(d.getFullYear(), d.getMonth() - 1))
@@ -144,6 +146,7 @@ export function StreakModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        data-onboarding="streak-modal"
         showCloseButton={false}
         className="max-h-[90dvh] overflow-hidden border-white/20 bg-slate-900/98 p-0 text-white backdrop-blur-xl sm:max-w-md"
       >

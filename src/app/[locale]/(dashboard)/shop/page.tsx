@@ -236,7 +236,7 @@ export default function ShopPage() {
             <Link
               href={`/${locale}/dashboard`}
               data-onboarding="back-dashboard"
-              className="inline-flex items-center gap-2 text-sm text-white/70 transition hover:text-white"
+              className="inline-flex scroll-mt-24 items-center gap-2 text-sm text-white/70 transition hover:text-white"
             >
               <ArrowLeft className="h-4 w-4" />
               {locale.startsWith('fr') ? 'Tableau de bord' : 'Dashboard'}

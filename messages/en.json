@@ -191,8 +191,18 @@
         "loading": "Loading missions…",
         "dailyQuestTitle": "Daily quest",
         "dailyQuestProgress": "{completed}/{target} missions completed",
-        "weeklyCompleted": "Week done",
-        "weeklyScheduled": "Week planned",
+        "dailyQuestReward": "Complete {target} missions today → +{xp} XP and +{gold} gold",
+        "dailyQuestClaimed": "Daily quest complete! Bonus claimed.",
+        "weeklyCompleted": "Completed this week",
+        "weeklyScheduled": "Scheduled this week",
+        "claimReward": "Claim",
+        "claimDailyQuest": "Claim bonus",
+        "claimCelebrationTitle": "Reward claimed!",
+        "claimLevelTitle": "Level {level} reward!",
+        "claimGold": "+{gold} gold",
+        "claimXp": "+{xp} XP",
+        "claimCta": "Nice!",
+        "dailyLoginRewardHint": "Daily reward",
         "weeklyXp": "Week XP",
         "due": "Due",
         "status": {
@@ -214,11 +224,20 @@
         "categoryLabel": "Category",
         "categoryPlaceholder": "Fitness, Learning, Productivity…",
         "typeLabel": "Type",
-        "xpLabel": "XP reward",
+        "typeHintHabit": "A routine to repeat — great for building behavior (e.g. drink water, read).",
+        "typeHintGoal": "A one-off task to check off — great for a specific deliverable (e.g. finish a report).",
+        "difficultyLabel": "Difficulty",
+        "xpLabel": "Difficulty",
         "difficultyEasy": "Easy",
         "difficultyMedium": "Medium",
         "difficultyHard": "Hard",
-        "xpAutoHint": "Auto reward: {xp} XP",
+        "xpAutoHint": "{xp} XP",
+        "templates": {
+          "hydrate": "Hydrate (8 glasses)",
+          "workout": "30 min workout",
+          "deepWork": "Deep work sprint (45 min)",
+          "read": "Read 20 minutes"
+        },
         "dueLabel": "Due",
         "dueFriendlyToday": "Today at {time}",
         "dueFriendlyYesterday": "Yesterday at {time}",
@@ -461,7 +480,7 @@
     }
   },
   "onboarding": {
-    "progress": "{current} / {total}",
+    "progress": "{percent}%",
     "next": "Next",
     "skip": "Skip tour",
     "welcome": {
@@ -477,25 +496,33 @@
       "title": "Your avatar",
       "body": "Tap here anytime to change your look. New avatars unlock as you level up."
     },
+    "dailyLogin": {
+      "title": "Daily reward",
+      "body": "Every day, a small reward waits just for opening the app. Tap the gift to collect it."
+    },
     "level": {
       "title": "Your level",
-      "body": "Complete missions to earn XP and climb levels. Each level unlocks gold rewards."
+      "body": "Tap here to open your level ladder. A red badge appears when rewards are ready to claim."
+    },
+    "levelModal": {
+      "title": "Level ladder",
+      "body": "When you level up, rewards glow here — tap Claim to collect your gold. Nothing is given automatically!"
     },
     "streak": {
       "title": "Your streak",
-      "body": "Complete at least one mission per day to build your streak. Consistency is key!"
+      "body": "Tap the flame to open your streak calendar and track your consistency."
+    },
+    "streakModal": {
+      "title": "Streak calendar",
+      "body": "Complete at least one mission per day to keep your streak alive. Hit 7 days in a row to unlock special rewards."
     },
     "gold": {
       "title": "Your gold",
-      "body": "Gold is earned when you level up. Spend it in the shop on real-life rewards you set for yourself."
+      "body": "Gold builds up as you progress. Spend it in the shop on rewards you set for yourself — a treat, an outing, something you actually want."
     },
     "missions": {
-      "title": "Daily missions",
-      "body": "This is where your habits and goals live. Each day you see what's scheduled for today."
-    },
-    "tutorialMission": {
-      "title": "Your tutorial mission",
-      "body": "We've added a \"Finish tutorial\" mission for you. You'll complete it at the very end to see how XP and gold work."
+      "title": "Your daily missions",
+      "body": "Every mission you complete moves you forward. Consistency beats perfection — a few actions each day add up fast."
     },
     "addMission": {
       "title": "Create your first mission",
@@ -503,7 +530,7 @@
     },
     "dailyQuest": {
       "title": "Daily quest",
-      "body": "Complete 5 missions in a day to fill this bar. It's a bonus challenge on top of your regular missions."
+      "body": "Complete 3 missions in a day to unlock bonus XP and gold. Small daily effort, big impact on your progress."
     },
     "shopNav": {
       "title": "Visit the shop",
@@ -519,7 +546,15 @@
     },
     "completeTutorial": {
       "title": "Complete your tutorial mission",
-      "body": "Tap the checkmark on \"Finish tutorial\" to complete it. Watch your XP and gold go up!"
+      "body": "Tap the checkmark to finish. Completing a mission earns XP — this one might even level you up!"
+    },
+    "claimLevel": {
+      "title": "You leveled up!",
+      "body": "The red badge means a reward is ready. Tap your level to see what's waiting."
+    },
+    "claimLevelModal": {
+      "title": "Open your reward",
+      "body": "Your new level is unlocked. Collect your gold — you'll spend it in the shop."
     },
     "done": {
       "title": "You're all set!",

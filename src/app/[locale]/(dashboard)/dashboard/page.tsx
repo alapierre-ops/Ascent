@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { signOut } from 'next-auth/react'
 import { useLocale, useTranslations } from 'next-intl'
@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Coins,
   Flame,
+  Gift,
   Loader2,
   Plus,
   Rocket,
@@ -37,13 +38,27 @@ import {
 } from '@/components/ui/dialog'
 import { Progress } from '@/components/ui/progress'
 
+import {
+  DAILY_QUEST_BONUS_GOLD,
+  DAILY_QUEST_BONUS_XP,
+  DAILY_QUEST_TARGET,
+  countsTowardDailyQuest,
+} from '@/lib/daily-quest'
+import { toBcp47Locale } from '@/lib/locale'
+import { DAILY_LOGIN_MISSION_CATEGORY } from '@/lib/missions/special'
 import { TUTORIAL_MISSION_CATEGORY } from '@/lib/onboarding/constants'
 import { ONBOARDING_TUTORIAL_READY_EVENT } from '@/lib/onboarding/events'
+import type { OnboardingAdvanceEvent } from '@/lib/onboarding/steps'
+import type { PendingRewardDto } from '@/lib/pending-rewards'
 import { cn } from '@/lib/utils'
 
 import { dashboardData } from '@/data/dashboard'
 
 import { AvatarPicker } from './components/AvatarPicker'
+import {
+  type ClaimCelebration,
+  ClaimRewardModal,
+} from './components/ClaimRewardModal'
 import { type MissionForModal, MissionModal } from './components/MissionModal'
 import { StreakModal } from './components/StreakModal'
 
@@ -56,6 +71,7 @@ const missionIconMap: Record<
 }
 
 function formatDueLabel(dueAt: string, locale: string): string {
+  const bcp47 = toBcp47Locale(locale)
   const d = new Date(dueAt)
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -63,12 +79,12 @@ function formatDueLabel(dueAt: string, locale: string): string {
   yesterday.setDate(yesterday.getDate() - 1)
   const dueDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
   if (dueDate.getTime() === today.getTime()) {
-    return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleTimeString(bcp47, { hour: '2-digit', minute: '2-digit' })
   }
   if (dueDate.getTime() === yesterday.getTime()) {
     return locale.startsWith('fr') ? 'Hier' : 'Yesterday'
   }
-  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+  return d.toLocaleDateString(bcp47, { day: 'numeric', month: 'short' })
 }
 
 export default function DashboardPage() {
@@ -105,8 +121,11 @@ export default function DashboardPage() {
     scheduled: number
     totalXp: number
   } | null>(null)
-  const [showLevelUp, setShowLevelUp] = useState<number | null>(null)
   const [goldGain, setGoldGain] = useState<number | null>(null)
+  const [pendingRewards, setPendingRewards] = useState<PendingRewardDto[]>([])
+  const [claimCelebration, setClaimCelebration] =
+    useState<ClaimCelebration>(null)
+  const [claimingId, setClaimingId] = useState<string | null>(null)
   const [userStats, setUserStats] = useState<{
     level: number
     xp: number
@@ -115,6 +134,18 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState<string | null>(null)
 
   const onboarding = useOnboardingOptional()
+  const pendingOnboardingClaim = useRef<OnboardingAdvanceEvent | null>(null)
+
+  const fetchPendingRewards = useCallback(async () => {
+    try {
+      const res = await fetch('/api/rewards/pending')
+      if (res.ok) {
+        setPendingRewards(await res.json())
+      }
+    } catch {
+      setPendingRewards([])
+    }
+  }, [])
 
   const fetchMissions = useCallback(
     async (date?: string) => {
@@ -136,6 +167,71 @@ export default function DashboardPage() {
     },
     [selectedDate]
   )
+
+  const claimReward = useCallback(
+    async (rewardId: string) => {
+      setClaimingId(rewardId)
+      try {
+        const res = await fetch('/api/rewards/claim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: rewardId }),
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        if (data.user) {
+          setUserStats(data.user)
+          if (data.gold > 0) {
+            setGoldGain(data.gold)
+            setTimeout(() => setGoldGain(null), 2200)
+          }
+        }
+        setClaimCelebration({
+          gold: data.gold,
+          xp: data.xp,
+          type: data.type,
+          refLevel: data.refLevel,
+        })
+        if (
+          onboarding?.currentStep?.id === 'daily-login' &&
+          data.type === 'DAILY_LOGIN'
+        ) {
+          pendingOnboardingClaim.current = 'daily-login-claimed'
+          onboarding.pause()
+        } else if (
+          onboarding?.currentStep?.id === 'claim-level-modal' &&
+          data.type === 'LEVEL_UP'
+        ) {
+          pendingOnboardingClaim.current = 'level-reward-claimed'
+          onboarding.pause()
+        }
+        await fetchPendingRewards()
+        await fetchMissions()
+      } finally {
+        setClaimingId(null)
+      }
+    },
+    [fetchMissions, fetchPendingRewards, onboarding]
+  )
+
+  const closeCelebration = useCallback(() => {
+    setClaimCelebration(null)
+    const event = pendingOnboardingClaim.current
+    if (!event || !onboarding?.currentStep) return
+    const stepId = onboarding.currentStep.id
+    const matches =
+      (event === 'daily-login-claimed' && stepId === 'daily-login') ||
+      (event === 'level-reward-claimed' && stepId === 'claim-level-modal')
+    if (!matches) return
+    pendingOnboardingClaim.current = null
+    onboarding.signal(event)
+  }, [onboarding])
+
+  const dailyQuestPending = pendingRewards.find((r) => r.type === 'DAILY_QUEST')
+  const dailyLoginPending = pendingRewards.find((r) => r.type === 'DAILY_LOGIN')
+  const levelPendingCount = pendingRewards.filter(
+    (r) => r.type === 'LEVEL_UP'
+  ).length
 
   const goToPrevDay = useCallback(() => {
     const d = new Date(selectedDate + 'T12:00:00')
@@ -164,7 +260,7 @@ export default function DashboardPage() {
     if (selectedDate === yesterdayStr) return tMissions('dayYesterday')
     if (selectedDate === tomorrowStr) return tMissions('dayTomorrow')
     const d = new Date(selectedDate + 'T12:00:00')
-    return d.toLocaleDateString(locale, {
+    return d.toLocaleDateString(toBcp47Locale(locale), {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
@@ -174,8 +270,6 @@ export default function DashboardPage() {
   const completeMission = useCallback(
     async (missionId: string) => {
       setCompletingId(missionId)
-      const prevLevel = userStats?.level ?? 0
-      const prevCurrency = userStats?.currency ?? 0
       try {
         const res = await fetch(`/api/missions/${missionId}`, {
           method: 'PATCH',
@@ -186,17 +280,11 @@ export default function DashboardPage() {
           const data = await res.json()
           if (data.user) {
             setUserStats(data.user)
-            if (data.user.level > prevLevel) {
-              setShowLevelUp(data.user.level)
-            }
-            if (data.user.currency > prevCurrency) {
-              setGoldGain(data.user.currency - prevCurrency)
-              setTimeout(() => setGoldGain(null), 2200)
-            }
           }
           if (onboarding?.tutorialMissionId === missionId) {
             onboarding.signal('tutorial-completed')
           }
+          await fetchPendingRewards()
           setJustCompletedMissionId(missionId)
           setTimeout(() => setJustCompletedMissionId(null), 1200)
           await fetchMissions()
@@ -205,7 +293,7 @@ export default function DashboardPage() {
         setCompletingId(null)
       }
     },
-    [fetchMissions, userStats?.level, userStats?.currency, onboarding]
+    [fetchMissions, onboarding, fetchPendingRewards]
   )
 
   const uncompleteMission = useCallback(
@@ -221,12 +309,13 @@ export default function DashboardPage() {
           const data = await res.json()
           if (data.user) setUserStats(data.user)
           await fetchMissions()
+          await fetchPendingRewards()
         }
       } finally {
         setCompletingId(null)
       }
     },
-    [fetchMissions]
+    [fetchMissions, fetchPendingRewards]
   )
 
   useEffect(() => {
@@ -289,10 +378,21 @@ export default function DashboardPage() {
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
   const isTodaySelected = selectedDate === todayStr
   const completedTodayCount = missions.filter(
-    (m) => m.status === 'COMPLETED'
+    (m) => m.status === 'COMPLETED' && countsTowardDailyQuest(m.category)
   ).length
-  const questTarget = 5
+  const questTarget = DAILY_QUEST_TARGET
   const questProgress = Math.min(100, (completedTodayCount / questTarget) * 100)
+
+  useEffect(() => {
+    fetch('/api/daily/ensure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale }),
+    })
+      .then(() => fetchMissions(todayStr))
+      .then(() => fetchPendingRewards())
+      .catch(() => {})
+  }, [locale, todayStr, fetchMissions, fetchPendingRewards])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -341,6 +441,32 @@ export default function DashboardPage() {
       setStarterLoading(false)
     }
   }, [fetchMissions, todayStr])
+
+  useEffect(() => {
+    if (!onboarding?.active) return
+    const stepId = onboarding.currentStep?.id
+    const id = window.setTimeout(() => {
+      if (stepId !== 'claim-level' && stepId !== 'claim-level-modal') {
+        setLevelsDialogOpen(false)
+      }
+      if (stepId !== 'streak' && stepId !== 'streak-modal') {
+        setStreakModalOpen(false)
+      }
+    }, 0)
+    return () => window.clearTimeout(id)
+  }, [onboarding?.active, onboarding?.currentStep?.id])
+
+  useEffect(() => {
+    if (levelsDialogOpen && onboarding?.currentStep?.id === 'claim-level') {
+      onboarding.signal('level-modal-opened')
+    }
+  }, [levelsDialogOpen, onboarding])
+
+  useEffect(() => {
+    if (streakModalOpen && onboarding?.currentStep?.id === 'streak') {
+      onboarding.signal('streak-modal-opened')
+    }
+  }, [streakModalOpen, onboarding])
 
   useEffect(() => {
     const onTutorialReady = () => {
@@ -399,16 +525,24 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       data-onboarding="level"
-                      className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
+                      className="relative flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
                       aria-label={`${t('overview.summary.level')} ${userStats?.level ?? overview.summary.level}`}
                     >
+                      {levelPendingCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 animate-pulse items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-lg">
+                          {levelPendingCount}
+                        </span>
+                      )}
                       <Sparkles className="h-4 w-4 text-amber-200 sm:h-5 sm:w-5" />
                       <span className="text-lg font-bold sm:text-xl">
                         {userStats?.level ?? overview.summary.level}
                       </span>
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] min-h-0 max-w-2xl flex-col border-white/20 bg-slate-900/95 text-white backdrop-blur-xl max-sm:top-4 max-sm:right-auto max-sm:left-1/2 max-sm:h-[calc(100dvh-2rem)] max-sm:max-h-[calc(100dvh-2rem)] max-sm:w-[calc(100%-2rem)] max-sm:-translate-x-1/2 max-sm:translate-y-0 max-sm:overflow-visible sm:h-auto sm:max-h-[80vh] sm:min-h-0">
+                  <DialogContent
+                    data-onboarding="levels-dialog"
+                    className="flex h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] min-h-0 max-w-2xl flex-col border-white/20 bg-slate-900/95 text-white backdrop-blur-xl max-sm:top-4 max-sm:right-auto max-sm:left-1/2 max-sm:h-[calc(100dvh-2rem)] max-sm:max-h-[calc(100dvh-2rem)] max-sm:w-[calc(100%-2rem)] max-sm:-translate-x-1/2 max-sm:translate-y-0 max-sm:overflow-visible sm:h-auto sm:max-h-[80vh] sm:min-h-0"
+                  >
                     <DialogHeader className="sticky top-0 -mx-6 -mt-1 shrink-0 border-b border-white/10 bg-slate-900/95 px-6 pt-1 pb-4 backdrop-blur-sm">
                       <DialogTitle className="flex items-center gap-2 text-xl sm:text-2xl">
                         <Trophy className="h-5 w-5 text-yellow-400 sm:h-6 sm:w-6" />
@@ -424,17 +558,28 @@ export default function DashboardPage() {
                         const isCompleted = level.level < displayLevel
                         const isNext = level.level === displayLevel + 1
                         const isLocked = level.level > displayLevel + 1
+                        const levelPending = pendingRewards.find(
+                          (r) =>
+                            r.type === 'LEVEL_UP' && r.refLevel === level.level
+                        )
                         return (
                           <div
                             key={level.level}
                             className={cn(
                               'relative flex items-center gap-4 rounded-xl border p-4 transition-all',
+                              levelPending &&
+                                'animate-pulse border-amber-400/70 bg-amber-500/15 ring-2 ring-amber-400/60',
                               isCurrent &&
+                                !levelPending &&
                                 'border-blue-500/50 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.3)]',
-                              isNext && 'border-purple-500/50 bg-purple-500/10',
+                              isNext &&
+                                !levelPending &&
+                                'border-purple-500/50 bg-purple-500/10',
                               isCompleted &&
+                                !levelPending &&
                                 '!border-emerald-400/70 bg-emerald-500/35 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
                               isLocked &&
+                                !levelPending &&
                                 'border-white/10 bg-white/5 opacity-50'
                             )}
                           >
@@ -528,8 +673,23 @@ export default function DashboardPage() {
                                 </span>
                               </div>
                             </div>
-                            {isNext && (
-                              <ChevronRight className="h-5 w-5 text-purple-400" />
+                            {levelPending ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                data-onboarding="level-claim"
+                                disabled={claimingId === levelPending.id}
+                                onClick={() => claimReward(levelPending.id)}
+                                className="shrink-0 animate-pulse bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 hover:opacity-95"
+                              >
+                                {claimingId === levelPending.id
+                                  ? '…'
+                                  : tMissions('claimReward')}
+                              </Button>
+                            ) : (
+                              isNext && (
+                                <ChevronRight className="h-5 w-5 text-purple-400" />
+                              )
                             )}
                           </div>
                         )
@@ -683,6 +843,28 @@ export default function DashboardPage() {
                         className="h-2 bg-white/10"
                         aria-label={tMissions('dailyQuestTitle')}
                       />
+                      {dailyQuestPending ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          data-onboarding="daily-quest-claim"
+                          disabled={claimingId === dailyQuestPending.id}
+                          onClick={() => claimReward(dailyQuestPending.id)}
+                          className="w-full animate-pulse bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 hover:opacity-95"
+                        >
+                          {claimingId === dailyQuestPending.id
+                            ? '…'
+                            : tMissions('claimDailyQuest')}
+                        </Button>
+                      ) : (
+                        <p className="text-xs text-white/60">
+                          {tMissions('dailyQuestReward', {
+                            xp: DAILY_QUEST_BONUS_XP,
+                            gold: DAILY_QUEST_BONUS_GOLD,
+                            target: questTarget,
+                          })}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 )}
@@ -723,6 +905,13 @@ export default function DashboardPage() {
                   const isTutorial =
                     mission.category === TUTORIAL_MISSION_CATEGORY ||
                     mission.id === onboarding?.tutorialMissionId
+                  const isDailyLogin =
+                    mission.category === DAILY_LOGIN_MISSION_CATEGORY
+                  const isDailyLoginClaimed = isDailyLogin && isCompleted
+                  const isTutorialStep =
+                    isTutorial &&
+                    onboarding?.currentStep?.id === 'complete-tutorial' &&
+                    !isCompleted
                   const isOverdue =
                     !isCompleted &&
                     (mission.status === 'OVERDUE' ||
@@ -732,21 +921,55 @@ export default function DashboardPage() {
                     <div
                       key={mission.id}
                       data-onboarding={
-                        isTutorial ? 'tutorial-mission' : undefined
+                        isTutorial
+                          ? 'tutorial-mission'
+                          : isDailyLogin
+                            ? 'daily-login-mission'
+                            : undefined
                       }
                       className={cn(
                         'relative flex w-full items-center gap-3 rounded-xl border p-4 transition-all duration-300',
+                        isTutorialStep &&
+                          'animate-pulse border-indigo-400/70 bg-indigo-500/15 ring-2 ring-indigo-400/60',
+                        isDailyLogin &&
+                          dailyLoginPending &&
+                          'animate-pulse border-amber-400/70 bg-amber-500/15 ring-2 ring-amber-400/50',
                         justCompletedMissionId === mission.id &&
                           'mission-just-completed',
+                        isDailyLoginClaimed &&
+                          'border-white/10 bg-white/[0.03] opacity-60',
                         isCompleted &&
+                          !isDailyLogin &&
                           '!border-emerald-400/70 bg-emerald-500/35 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
                         !isCompleted &&
+                          !isTutorialStep &&
                           (isOverdue
                             ? 'border-amber-500/30 bg-amber-500/5'
                             : 'border-white/10 bg-white/[0.06]')
                       )}
                     >
-                      {!isCompleted ? (
+                      {isDailyLogin && dailyLoginPending ? (
+                        <button
+                          type="button"
+                          data-onboarding="daily-login-claim"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void claimReward(dailyLoginPending.id)
+                          }}
+                          disabled={claimingId === dailyLoginPending.id}
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 text-slate-900 shadow-lg shadow-amber-500/30 transition hover:opacity-90 disabled:opacity-50"
+                          aria-label={tMissions('claimReward')}
+                        >
+                          <Gift className="h-6 w-6" />
+                        </button>
+                      ) : isDailyLoginClaimed ? (
+                        <div
+                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/8 text-white/25"
+                          aria-hidden
+                        >
+                          <Gift className="h-6 w-6" />
+                        </div>
+                      ) : !isCompleted ? (
                         <button
                           type="button"
                           data-onboarding={
@@ -757,7 +980,12 @@ export default function DashboardPage() {
                             completeMission(mission.id)
                           }}
                           disabled={completingId === mission.id}
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-300 transition hover:bg-emerald-500/30 disabled:opacity-50"
+                          className={cn(
+                            'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition disabled:opacity-50',
+                            isTutorialStep
+                              ? 'relative z-[81] bg-indigo-500/30 text-indigo-100 shadow-lg shadow-indigo-500/30 hover:bg-indigo-500/40'
+                              : 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30'
+                          )}
                           aria-label={t('overview.missionModal.complete')}
                         >
                           <Check className="h-6 w-6" />
@@ -778,13 +1006,19 @@ export default function DashboardPage() {
                       )}
                       <button
                         type="button"
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                        className={cn(
+                          'flex min-w-0 flex-1 items-center gap-3 text-left',
+                          isTutorialStep && 'pointer-events-none'
+                        )}
                         onClick={() => openMissionModal(mission)}
                       >
                         <div
                           className={cn(
                             'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-bold text-white shadow-lg',
+                            isDailyLoginClaimed &&
+                              'bg-white/8 text-white/25 shadow-none',
                             isCompleted &&
+                              !isDailyLogin &&
                               'bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-500/30',
                             !isCompleted &&
                               (isOverdue
@@ -792,7 +1026,9 @@ export default function DashboardPage() {
                                 : 'bg-white/10 text-white/90')
                           )}
                         >
-                          {isCompleted ? (
+                          {isDailyLoginClaimed ? (
+                            <Gift className="h-6 w-6" aria-hidden />
+                          ) : isCompleted ? (
                             <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
                           ) : (
                             <Icon className="h-6 w-6" aria-hidden />
@@ -802,9 +1038,12 @@ export default function DashboardPage() {
                           <p
                             className={cn(
                               'truncate font-semibold',
-                              isCompleted
-                                ? 'text-emerald-200/95 line-through'
-                                : 'text-white'
+                              isDailyLoginClaimed &&
+                                'text-white/45 line-through',
+                              isCompleted &&
+                                !isDailyLogin &&
+                                'text-emerald-200/95 line-through',
+                              !isCompleted && 'text-white'
                             )}
                           >
                             {mission.title}
@@ -812,9 +1051,11 @@ export default function DashboardPage() {
                           <p
                             className={cn(
                               'text-xs',
-                              isCompleted
-                                ? 'text-emerald-200/80'
-                                : 'text-white/60'
+                              isDailyLoginClaimed && 'text-white/40',
+                              isCompleted &&
+                                !isDailyLogin &&
+                                'text-emerald-200/80',
+                              !isCompleted && 'text-white/60'
                             )}
                           >
                             {formatDueLabel(mission.dueAt, locale)}
@@ -824,14 +1065,30 @@ export default function DashboardPage() {
                               </span>
                             )}
                             {isCompleted && (
-                              <span className="ml-1.5 text-emerald-200/90">
+                              <span
+                                className={cn(
+                                  'ml-1.5',
+                                  isDailyLoginClaimed
+                                    ? 'text-white/40'
+                                    : 'text-emerald-200/90'
+                                )}
+                              >
                                 · {tMissions('status.completed')}
                               </span>
                             )}
                           </p>
                         </div>
-                        <span className="shrink-0 rounded-lg bg-gradient-to-r from-indigo-500/80 to-fuchsia-500/80 px-2.5 py-1 text-xs font-semibold text-white">
-                          +{mission.xp} XP
+                        <span
+                          className={cn(
+                            'shrink-0 rounded-lg px-2.5 py-1 text-xs font-semibold',
+                            isDailyLoginClaimed
+                              ? 'bg-white/10 text-white/40'
+                              : 'bg-gradient-to-r from-indigo-500/80 to-fuchsia-500/80 text-white'
+                          )}
+                        >
+                          {isDailyLogin
+                            ? tMissions('dailyLoginRewardHint')
+                            : `+${mission.xp} XP`}
                         </span>
                         <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
                       </button>
@@ -877,59 +1134,16 @@ export default function DashboardPage() {
         mission={missionEditing}
         onSuccess={() => {
           void fetchMissions()
-          if (
-            onboarding?.active &&
-            onboarding.currentStep?.id === 'add-mission' &&
-            !missionEditing
-          ) {
-            onboarding.signal('mission-created')
-            onboarding.resume()
-          }
+        }}
+        onCreated={() => {
+          onboarding?.signal('mission-created')
         }}
       />
 
-      {/* Level up celebration */}
-      <Dialog
-        open={showLevelUp != null}
-        onOpenChange={(open) => !open && setShowLevelUp(null)}
-      >
-        <DialogContent className="border-amber-500/50 bg-gradient-to-br from-amber-500/20 via-yellow-500/20 to-amber-600/30 text-white backdrop-blur-xl sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex flex-col items-center gap-3 text-center text-2xl">
-              <span className="level-up-badge flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 shadow-lg shadow-amber-500/40">
-                <Trophy className="h-8 w-8 text-white" />
-              </span>
-              {t('overview.level.levelUp.title')}
-              <span className="text-4xl font-bold text-amber-200">
-                {t('overview.level.levelUp.level', { level: showLevelUp ?? 0 })}
-              </span>
-            </DialogTitle>
-          </DialogHeader>
-          {showLevelUp != null &&
-            (() => {
-              const levelReward = levels.find((l) => l.level === showLevelUp)
-              if (!levelReward) return null
-              return (
-                <div className="flex flex-col items-center gap-2 border-t border-white/20 pt-4 text-center">
-                  <p className="text-sm font-medium text-amber-100">
-                    {t(`overview.level.rewards.${levelReward.level}`)}
-                  </p>
-                  <p className="flex items-center gap-1.5 text-lg font-bold text-yellow-300">
-                    <Coins className="h-5 w-5" />
-                    {t('overview.level.levelUp.rewardGold', {
-                      gold: numberFormatter.format(levelReward.reward.gold),
-                    })}
-                  </p>
-                  {(showLevelUp === 5 || showLevelUp === 15) && (
-                    <p className="text-sm text-amber-200/90">
-                      {t('overview.level.levelUp.avatarsUnlocked')}
-                    </p>
-                  )}
-                </div>
-              )
-            })()}
-        </DialogContent>
-      </Dialog>
+      <ClaimRewardModal
+        celebration={claimCelebration}
+        onClose={closeCelebration}
+      />
     </div>
   )
 }

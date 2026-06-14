@@ -5,6 +5,10 @@ export type OnboardingAdvanceEvent =
   | 'tutorial-completed'
   | 'navigate-shop'
   | 'navigate-dashboard'
+  | 'level-modal-opened'
+  | 'streak-modal-opened'
+  | 'daily-login-claimed'
+  | 'level-reward-claimed'
 
 export type OnboardingRoute = 'dashboard' | 'shop'
 
@@ -50,13 +54,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     route: 'dashboard',
   },
   {
-    id: 'level',
+    id: 'daily-login',
     type: 'spotlight',
-    target: 'level',
-    titleKey: 'level.title',
-    bodyKey: 'level.body',
-    ctaKey: 'next',
-    advanceOn: 'next',
+    target: 'daily-login-claim',
+    titleKey: 'dailyLogin.title',
+    bodyKey: 'dailyLogin.body',
+    advanceOn: 'daily-login-claimed',
     route: 'dashboard',
   },
   {
@@ -65,6 +68,15 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: 'streak',
     titleKey: 'streak.title',
     bodyKey: 'streak.body',
+    advanceOn: 'streak-modal-opened',
+    route: 'dashboard',
+  },
+  {
+    id: 'streak-modal',
+    type: 'spotlight',
+    target: 'streak-modal',
+    titleKey: 'streakModal.title',
+    bodyKey: 'streakModal.body',
     ctaKey: 'next',
     advanceOn: 'next',
     route: 'dashboard',
@@ -85,16 +97,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: 'missions',
     titleKey: 'missions.title',
     bodyKey: 'missions.body',
-    ctaKey: 'next',
-    advanceOn: 'next',
-    route: 'dashboard',
-  },
-  {
-    id: 'tutorial-mission',
-    type: 'spotlight',
-    target: 'tutorial-mission',
-    titleKey: 'tutorialMission.title',
-    bodyKey: 'tutorialMission.body',
     ctaKey: 'next',
     advanceOn: 'next',
     route: 'dashboard',
@@ -148,10 +150,28 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     id: 'complete-tutorial',
     type: 'spotlight',
-    target: 'tutorial-complete',
+    target: 'tutorial-mission',
     titleKey: 'completeTutorial.title',
     bodyKey: 'completeTutorial.body',
     advanceOn: 'tutorial-completed',
+    route: 'dashboard',
+  },
+  {
+    id: 'claim-level',
+    type: 'spotlight',
+    target: 'level',
+    titleKey: 'claimLevel.title',
+    bodyKey: 'claimLevel.body',
+    advanceOn: 'level-modal-opened',
+    route: 'dashboard',
+  },
+  {
+    id: 'claim-level-modal',
+    type: 'spotlight',
+    target: 'level-claim',
+    titleKey: 'claimLevelModal.title',
+    bodyKey: 'claimLevelModal.body',
+    advanceOn: 'level-reward-claimed',
     route: 'dashboard',
   },
   {

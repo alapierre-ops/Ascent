@@ -191,8 +191,18 @@
         "loading": "Chargement des missions…",
         "dailyQuestTitle": "Quête du jour",
         "dailyQuestProgress": "{completed}/{target} missions terminées",
-        "weeklyCompleted": "Semaine terminée",
-        "weeklyScheduled": "Semaine planifiée",
+        "dailyQuestReward": "Termine {target} missions aujourd'hui → +{xp} XP et +{gold} or",
+        "dailyQuestClaimed": "Quête du jour accomplie ! Bonus récupéré.",
+        "weeklyCompleted": "Terminées cette semaine",
+        "weeklyScheduled": "Planifiées cette semaine",
+        "claimReward": "Récupérer",
+        "claimDailyQuest": "Récupérer le bonus",
+        "claimCelebrationTitle": "Récompense récupérée !",
+        "claimLevelTitle": "Récompense niveau {level} !",
+        "claimGold": "+{gold} or",
+        "claimXp": "+{xp} XP",
+        "claimCta": "Super !",
+        "dailyLoginRewardHint": "Récompense du jour",
         "weeklyXp": "XP de la semaine",
         "due": "Échéance",
         "status": {
@@ -214,11 +224,20 @@
         "categoryLabel": "Catégorie",
         "categoryPlaceholder": "Fitness, Apprentissage, Productivité…",
         "typeLabel": "Type",
-        "xpLabel": "Récompense XP",
+        "typeHintHabit": "Une routine à répéter — idéal pour ancrer un comportement (ex. boire de l'eau, lire).",
+        "typeHintGoal": "Une tâche ponctuelle à cocher — idéal pour un livrable précis (ex. finir un rapport).",
+        "difficultyLabel": "Difficulté",
+        "xpLabel": "Difficulté",
         "difficultyEasy": "Facile",
         "difficultyMedium": "Moyen",
         "difficultyHard": "Difficile",
-        "xpAutoHint": "Récompense auto : {xp} XP",
+        "xpAutoHint": "{xp} XP",
+        "templates": {
+          "hydrate": "S'hydrater (8 verres)",
+          "workout": "30 min de sport",
+          "deepWork": "Sprint deep work (45 min)",
+          "read": "Lire 20 minutes"
+        },
         "dueLabel": "Échéance",
         "dueFriendlyToday": "Aujourd'hui à {time}",
         "dueFriendlyYesterday": "Hier à {time}",
@@ -461,12 +480,12 @@
     }
   },
   "onboarding": {
-    "progress": "{current} / {total}",
+    "progress": "{percent} %",
     "next": "Suivant",
     "skip": "Passer le tutoriel",
     "welcome": {
       "title": "Bienvenue sur Ascent !",
-      "body": "Faisons un rapide tour d'horizon et configurons tes premières missions. Ça ne prend que quelques minutes.",
+      "body": "On va te faire découvrir l'app pas à pas et t'aider à créer tes premières missions. Ça ne prend que quelques minutes.",
       "cta": "C'est parti"
     },
     "playerBar": {
@@ -477,25 +496,33 @@
       "title": "Ton avatar",
       "body": "Appuie ici pour changer ton look. De nouveaux avatars se débloquent en montant de niveau."
     },
+    "dailyLogin": {
+      "title": "Récompense du jour",
+      "body": "Chaque jour, une petite récompense t'attend rien que pour ouvrir l'app. Appuie sur le cadeau pour la récupérer."
+    },
     "level": {
       "title": "Ton niveau",
-      "body": "Termine des missions pour gagner de l'XP et monter de niveau. Chaque niveau rapporte de l'or."
+      "body": "Appuie ici pour voir l'échelle des niveaux. Un badge rouge apparaît quand des récompenses sont prêtes."
+    },
+    "levelModal": {
+      "title": "Échelle des niveaux",
+      "body": "Quand tu montes de niveau, les récompenses brillent ici — appuie sur Récupérer pour collecter ton or. Rien n'est donné automatiquement !"
     },
     "streak": {
       "title": "Ta série",
-      "body": "Termine au moins une mission par jour pour construire ta série. La régularité, c'est la clé !"
+      "body": "Appuie sur la flamme pour ouvrir ton calendrier de série et suivre ta régularité."
+    },
+    "streakModal": {
+      "title": "Calendrier de série",
+      "body": "Termine au moins une mission par jour pour garder ta série. Atteins 7 jours d'affilée pour débloquer des récompenses spéciales."
     },
     "gold": {
       "title": "Ton or",
-      "body": "L'or est gagné quand tu montes de niveau. Dépense-le dans la boutique sur des récompenses que tu te fixes."
+      "body": "L'or s'accumule au fil de ta progression. Dépense-le dans la boutique sur des récompenses que tu te fixes — un dessert, une sortie, un achat sympa."
     },
     "missions": {
-      "title": "Missions du jour",
-      "body": "C'est ici que vivent tes habitudes et objectifs. Chaque jour, tu vois ce qui est prévu."
-    },
-    "tutorialMission": {
-      "title": "Ta mission tutoriel",
-      "body": "On t'a ajouté une mission « Terminer le tutoriel ». Tu la compléteras à la toute fin pour voir comment l'XP et l'or fonctionnent."
+      "title": "Tes missions du jour",
+      "body": "Chaque mission cochée te rapproche de tes objectifs. La régularité compte plus que la perfection : quelques actions chaque jour, et ça change tout."
     },
     "addMission": {
       "title": "Crée ta première mission",
@@ -503,7 +530,7 @@
     },
     "dailyQuest": {
       "title": "Quête quotidienne",
-      "body": "Termine 5 missions en une journée pour remplir cette barre. C'est un défi bonus en plus de tes missions habituelles."
+      "body": "Termine 3 missions dans la journée et débloque un bonus XP et de l'or. Petit effort régulier, gros impact sur ta progression."
     },
     "shopNav": {
       "title": "Visite la boutique",
@@ -519,7 +546,15 @@
     },
     "completeTutorial": {
       "title": "Termine ta mission tutoriel",
-      "body": "Appuie sur la coche de « Terminer le tutoriel » pour la compléter. Regarde ton XP et ton or augmenter !"
+      "body": "Appuie sur la coche pour valider. Compléter une mission donne de l'XP — celle-ci pourrait même te faire monter de niveau !"
+    },
+    "claimLevel": {
+      "title": "Tu as monté de niveau !",
+      "body": "Le badge rouge signale une récompense prête. Appuie sur ton niveau pour voir ce qui t'attend."
+    },
+    "claimLevelModal": {
+      "title": "Ouvre ta récompense",
+      "body": "Ton nouveau niveau est débloqué. Récupère ton or — tu pourras le dépenser dans la boutique."
     },
     "done": {
       "title": "Tu es prêt !",
