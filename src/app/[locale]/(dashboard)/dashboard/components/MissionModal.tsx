@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 
 import { toBcp47Locale } from '@/lib/locale'
+import { isRecurringHabit } from '@/lib/missions/recurrence'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = [
@@ -68,6 +69,7 @@ export type MissionForModal = {
   xp: number
   dueAt: string
   status: string
+  repeatKey?: string | null
 }
 
 function toDateTimeLocal(iso: string): string {
@@ -161,6 +163,7 @@ export function MissionModal({
   const [editingDue, setEditingDue] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteChoiceOpen, setDeleteChoiceOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const dueDatePart = dueDateTime ? dueDateTime.slice(0, 10) : ''
@@ -248,15 +251,17 @@ export function MissionModal({
     }
   }
 
-  const handleDelete = async () => {
-    if (!mission || !confirm(t('deleteConfirm'))) return
+  const handleDelete = async (scope: 'single' | 'future') => {
+    if (!mission) return
     setDeleting(true)
     setError(null)
     try {
-      const res = await fetch(`/api/missions/${mission.id}`, {
-        method: 'DELETE',
-      })
+      const res = await fetch(
+        `/api/missions/${mission.id}?scope=${scope === 'future' ? 'future' : 'single'}`,
+        { method: 'DELETE' }
+      )
       if (!res.ok) throw new Error('Failed to delete')
+      setDeleteChoiceOpen(false)
       onSuccess()
       onOpenChange(false)
     } catch (err) {
@@ -264,6 +269,16 @@ export function MissionModal({
     } finally {
       setDeleting(false)
     }
+  }
+
+  const onDeleteClick = () => {
+    if (!mission) return
+    if (isRecurringHabit(mission)) {
+      setDeleteChoiceOpen(true)
+      return
+    }
+    if (!confirm(t('deleteConfirm'))) return
+    void handleDelete('single')
   }
 
   return (
@@ -553,13 +568,48 @@ export function MissionModal({
                 type="button"
                 variant="outline"
                 className="border-red-500/50 text-red-300 hover:bg-red-500/20"
-                onClick={handleDelete}
+                onClick={onDeleteClick}
                 disabled={deleting}
               >
                 {deleting ? '…' : t('delete')}
               </Button>
             )}
           </div>
+          {deleteChoiceOpen && (
+            <div className="space-y-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+              <p className="text-sm font-medium text-white">
+                {t('deleteScopeTitle')}
+              </p>
+              <p className="text-xs text-white/60">{t('deleteScopeHint')}</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 border-white/20 text-white hover:bg-white/10"
+                  disabled={deleting}
+                  onClick={() => void handleDelete('single')}
+                >
+                  {t('deleteTodayOnly')}
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                  disabled={deleting}
+                  onClick={() => void handleDelete('future')}
+                >
+                  {t('deleteAllFuture')}
+                </Button>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-white/50 hover:text-white"
+                onClick={() => setDeleteChoiceOpen(false)}
+              >
+                {t('cancel')}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

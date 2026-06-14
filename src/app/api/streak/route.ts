@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { buildStreakSummary } from '@/lib/streak'
+import { getUserStreakContext, parseFrozenDates } from '@/lib/streak-user'
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,11 +31,14 @@ export async function GET(request: NextRequest) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { level: true },
+      select: { level: true, frozenStreakDates: true, streakFreeze: true },
     })
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
+
+    const frozenDates = parseFrozenDates(user.frozenStreakDates)
+    const streakCtx = await getUserStreakContext(prisma, session.user.id, now)
 
     const monthStart = new Date(year, month, 1, 0, 0, 0, 0)
     const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999)
@@ -61,18 +65,20 @@ export async function GET(request: NextRequest) {
       year,
       month,
       user.level,
-      now
+      now,
+      frozenDates
     )
     const monthSummary = buildStreakSummary(
       monthDueDates,
       year,
       month,
       user.level,
-      now
+      now,
+      frozenDates
     )
 
     return NextResponse.json({
-      currentStreak: summary.currentStreak,
+      currentStreak: streakCtx.currentStreak,
       goalDays: summary.goalDays,
       activeDays: monthSummary.activeDays,
       monthActiveDays: monthSummary.monthActiveDays,
@@ -81,6 +87,14 @@ export async function GET(request: NextRequest) {
       userLevel: user.level,
       year,
       month,
+      multiplier: streakCtx.multiplier,
+      bonusPercent: streakCtx.bonusPercent,
+      completedWeeks: streakCtx.completedWeeks,
+      daysToNextBonus: streakCtx.daysToNextBonus,
+      nextBonusPercent: streakCtx.nextBonusPercent,
+      streakFreeze: streakCtx.streakFreeze,
+      canUseFreeze: streakCtx.canUseFreeze,
+      frozenDates: streakCtx.frozenDates,
     })
   } catch (error) {
     console.error('Streak GET error:', error)

@@ -29,6 +29,7 @@ model User {
   bio           String?
   image         String?   // Avatar URL
   streakFreeze  Int       @default(0)      // Jokers pour sauver une série (Payant/Rare)
+  frozenStreakDates Json  @default("[]")   // Dates YYYY-MM-DD comptées comme actives (freeze)
   
   // --- RELATIONS ---
   habits        Habit[]
@@ -37,6 +38,8 @@ model User {
   badges        UserBadge[]
   missions      Mission[]
   pendingRewards PendingReward[]
+  achievements  UserAchievement[]
+  adRewardLogs  AdRewardLog[]
   
   // Relation Sociale (Self-referencing many-to-many pour les amis)
   followedBy    UserFollows[] @relation("following")
@@ -74,29 +77,59 @@ model Mission {
   xp        Int
   dueAt     DateTime      // date + heure d’échéance
   status    MissionStatus @default(SCHEDULED)
+  xpApplied Int?          // XP réellement accordé (avec multiplicateur streak)
+  repeatKey String?       // Habitudes récurrentes : même clé pour toute la série
   createdAt DateTime      @default(now())
+
+  @@index([userId, repeatKey])
 }
 
 enum PendingRewardType {
   LEVEL_UP
   DAILY_QUEST
   DAILY_LOGIN
+  ACHIEVEMENT
 }
 
 model PendingReward {
-  id        String            @id @default(cuid())
-  userId    String
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      PendingRewardType
-  refLevel  Int?
-  refDate   String?
-  gold      Int               @default(0)
-  xp        Int               @default(0)
-  claimedAt DateTime?
-  createdAt DateTime          @default(now())
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             PendingRewardType
+  refLevel         Int?
+  refDate          String?
+  refAchievementId String?
+  refTier          Int?
+  gold             Int               @default(0)
+  xp               Int               @default(0)
+  claimedAt        DateTime?
+  createdAt        DateTime          @default(now())
 
   @@unique([userId, type, refLevel])
   @@unique([userId, type, refDate])
+  @@unique([userId, type, refAchievementId, refTier])
+}
+
+model UserAchievement {
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  progress      Int      @default(0)
+  currentTier   Int      @default(0)
+  updatedAt     DateTime @updatedAt
+
+  @@id([userId, achievementId])
+}
+
+model AdRewardLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  refId     String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 // Legacy v1: Habit + HabitLog. Mission is the v2 model for daily tasks on the dashboard.

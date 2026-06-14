@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { getAchievementById } from '@/lib/achievements/definitions'
+import { evaluateAchievements } from '@/lib/achievements/service'
 import { auth } from '@/lib/auth'
 import { applyXpAndLevelOnly } from '@/lib/levels'
 import { DAILY_LOGIN_MISSION_CATEGORY } from '@/lib/missions/special'
@@ -78,9 +80,26 @@ export async function POST(request: NextRequest) {
         : []),
     ])
 
+    if (pending.type === 'DAILY_LOGIN' || pending.type === 'DAILY_QUEST') {
+      await evaluateAchievements(prisma, session.user.id)
+    }
+
+    const achievementDef =
+      pending.type === 'ACHIEVEMENT' && pending.refAchievementId
+        ? getAchievementById(pending.refAchievementId)
+        : null
+    const achievementTier =
+      pending.type === 'ACHIEVEMENT' && pending.refTier
+        ? achievementDef?.tiers.find((t) => t.tier === pending.refTier)
+        : null
+
     return NextResponse.json({
       type: pending.type,
       refLevel: pending.refLevel,
+      refAchievementId: pending.refAchievementId,
+      refTier: pending.refTier,
+      achievementIcon: achievementTier?.icon ?? achievementDef?.icon ?? null,
+      achievementFrame: achievementTier?.frame ?? null,
       gold: pending.gold,
       xp: pending.xp,
       user: { level, xp, currency },

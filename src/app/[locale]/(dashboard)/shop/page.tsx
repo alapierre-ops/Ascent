@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { SponsoredCard } from '@/components/ads/SponsoredCard'
 import { useOnboardingOptional } from '@/components/onboarding/OnboardingProvider'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,10 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 
 import { SHOP_EXAMPLE_REWARDS } from '@/data/shop'
+
+const SPONSOR_INSERT_INDEX = 6
+const IDEAS_BEFORE_SPONSOR = SHOP_EXAMPLE_REWARDS.slice(0, SPONSOR_INSERT_INDEX)
+const IDEAS_AFTER_SPONSOR = SHOP_EXAMPLE_REWARDS.slice(SPONSOR_INSERT_INDEX)
 
 export default function ShopPage() {
   const t = useTranslations('shop')
@@ -80,6 +85,33 @@ export default function ShopPage() {
   useEffect(() => {
     loadRewardsData()
   }, [])
+
+  const handleStreakFreezePurchase = async (reward: {
+    id: string
+    titleKey: string
+    cost: number
+  }) => {
+    setRedeeming(reward.id)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/streak/freeze/purchase', {
+        method: 'POST',
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) {
+        setMessage(
+          data?.error === 'INSUFFICIENT_GOLD'
+            ? t('notEnoughGold')
+            : t('streakFreeze.purchaseFailed')
+        )
+        return
+      }
+      setBalance(data.balance ?? balance ?? 0)
+      setMessage(t('streakFreeze.purchaseSuccess'))
+    } finally {
+      setRedeeming(null)
+    }
+  }
 
   const handleRedeem = async (reward: {
     id: string
@@ -265,70 +297,6 @@ export default function ShopPage() {
               </div>
             </CardContent>
           </Card>
-
-          <section className="space-y-4">
-            <div>
-              <h2 className="text-lg font-semibold text-white">
-                {t('ideasTitle')}
-              </h2>
-              <p className="mt-1 text-sm text-white/60">
-                {t('ideasDescription')}
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {SHOP_EXAMPLE_REWARDS.map((reward) => (
-                <Card
-                  key={reward.id}
-                  className="border-white/10 bg-white/[0.04] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.06]"
-                >
-                  <CardContent className="flex flex-col gap-3 p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-2xl" role="img" aria-hidden>
-                        {reward.icon}
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        className="shrink-0 border-white/20 bg-white/10 text-xs text-white/80"
-                      >
-                        {t(reward.categoryKey)}
-                      </Badge>
-                    </div>
-                    <h3 className="font-semibold text-white">
-                      {t(reward.titleKey)}
-                    </h3>
-                    <p className="line-clamp-2 flex-1 text-sm text-white/60">
-                      {t(reward.descriptionKey)}
-                    </p>
-                    <p className="flex items-center gap-1.5 text-sm font-medium text-amber-300">
-                      <Coins className="h-4 w-4" />
-                      {t('costGold', {
-                        cost: numberFormatter.format(reward.cost),
-                      })}
-                    </p>
-                    <Button
-                      type="button"
-                      disabled={
-                        redeeming === reward.id || (balance ?? 0) < reward.cost
-                      }
-                      onClick={() =>
-                        handleRedeem({
-                          id: reward.id,
-                          title: t(reward.titleKey),
-                          cost: reward.cost,
-                          icon: reward.icon,
-                          titleKey: reward.titleKey,
-                        })
-                      }
-                      className="mt-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 hover:opacity-95"
-                    >
-                      {redeeming === reward.id ? '…' : t('redeem')}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
 
           <section className="space-y-4">
             <div>
@@ -521,6 +489,136 @@ export default function ShopPage() {
                 })}
               </div>
             )}
+          </section>
+
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold text-white">
+                {t('ideasTitle')}
+              </h2>
+              <p className="mt-1 text-sm text-white/60">
+                {t('ideasDescription')}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {IDEAS_BEFORE_SPONSOR.map((reward) => (
+                <Card
+                  key={reward.id}
+                  className="border-white/10 bg-white/[0.04] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.06]"
+                >
+                  <CardContent className="flex h-full flex-col gap-2 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xl" role="img" aria-hidden>
+                        {reward.icon}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 border-white/20 bg-white/10 text-[0.65rem] text-white/80"
+                      >
+                        {t(reward.categoryKey)}
+                      </Badge>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">
+                      {t(reward.titleKey)}
+                    </h3>
+                    <p className="line-clamp-2 flex-1 text-xs text-white/60">
+                      {t(reward.descriptionKey)}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs font-medium text-amber-300">
+                      <Coins className="h-3.5 w-3.5" />
+                      {t('costGold', {
+                        cost: numberFormatter.format(reward.cost),
+                      })}
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={
+                        redeeming === reward.id || (balance ?? 0) < reward.cost
+                      }
+                      onClick={() =>
+                        'systemType' in reward &&
+                        reward.systemType === 'STREAK_FREEZE'
+                          ? handleStreakFreezePurchase({
+                              id: reward.id,
+                              titleKey: reward.titleKey,
+                              cost: reward.cost,
+                            })
+                          : handleRedeem({
+                              id: reward.id,
+                              title: t(reward.titleKey),
+                              cost: reward.cost,
+                              icon: reward.icon,
+                              titleKey: reward.titleKey,
+                            })
+                      }
+                      className="mt-auto bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 hover:opacity-95"
+                    >
+                      {redeeming === reward.id ? '…' : t('redeem')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+              <SponsoredCard />
+              {IDEAS_AFTER_SPONSOR.map((reward) => (
+                <Card
+                  key={reward.id}
+                  className="border-white/10 bg-white/[0.04] backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.06]"
+                >
+                  <CardContent className="flex h-full flex-col gap-2 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xl" role="img" aria-hidden>
+                        {reward.icon}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 border-white/20 bg-white/10 text-[0.65rem] text-white/80"
+                      >
+                        {t(reward.categoryKey)}
+                      </Badge>
+                    </div>
+                    <h3 className="text-sm font-semibold text-white">
+                      {t(reward.titleKey)}
+                    </h3>
+                    <p className="line-clamp-2 flex-1 text-xs text-white/60">
+                      {t(reward.descriptionKey)}
+                    </p>
+                    <p className="flex items-center gap-1 text-xs font-medium text-amber-300">
+                      <Coins className="h-3.5 w-3.5" />
+                      {t('costGold', {
+                        cost: numberFormatter.format(reward.cost),
+                      })}
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={
+                        redeeming === reward.id || (balance ?? 0) < reward.cost
+                      }
+                      onClick={() =>
+                        'systemType' in reward &&
+                        reward.systemType === 'STREAK_FREEZE'
+                          ? handleStreakFreezePurchase({
+                              id: reward.id,
+                              titleKey: reward.titleKey,
+                              cost: reward.cost,
+                            })
+                          : handleRedeem({
+                              id: reward.id,
+                              title: t(reward.titleKey),
+                              cost: reward.cost,
+                              icon: reward.icon,
+                              titleKey: reward.titleKey,
+                            })
+                      }
+                      className="mt-auto bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 hover:opacity-95"
+                    >
+                      {redeeming === reward.id ? '…' : t('redeem')}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </section>
 
           <section className="space-y-3">

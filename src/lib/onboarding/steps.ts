@@ -7,10 +7,12 @@ export type OnboardingAdvanceEvent =
   | 'navigate-dashboard'
   | 'level-modal-opened'
   | 'streak-modal-opened'
+  | 'day-picker-opened'
   | 'daily-login-claimed'
   | 'level-reward-claimed'
+  | 'navigate-achievements'
 
-export type OnboardingRoute = 'dashboard' | 'shop'
+export type OnboardingRoute = 'dashboard' | 'shop' | 'achievements'
 
 export type OnboardingStep = {
   id: string
@@ -82,6 +84,24 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     route: 'dashboard',
   },
   {
+    id: 'achievements',
+    type: 'spotlight',
+    target: 'achievements',
+    titleKey: 'achievementsNav.title',
+    bodyKey: 'achievementsNav.body',
+    advanceOn: 'navigate-achievements',
+    route: 'dashboard',
+  },
+  {
+    id: 'achievements-page',
+    type: 'spotlight',
+    target: 'achievements-back',
+    titleKey: 'achievementsPage.title',
+    bodyKey: 'achievementsPage.body',
+    advanceOn: 'navigate-dashboard',
+    route: 'achievements',
+  },
+  {
     id: 'gold',
     type: 'spotlight',
     target: 'gold',
@@ -89,6 +109,15 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     bodyKey: 'gold.body',
     ctaKey: 'next',
     advanceOn: 'next',
+    route: 'dashboard',
+  },
+  {
+    id: 'day-picker',
+    type: 'spotlight',
+    target: 'day-picker',
+    titleKey: 'dayPicker.title',
+    bodyKey: 'dayPicker.body',
+    advanceOn: 'day-picker-opened',
     route: 'dashboard',
   },
   {
@@ -108,6 +137,16 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     titleKey: 'addMission.title',
     bodyKey: 'addMission.body',
     advanceOn: 'mission-created',
+    route: 'dashboard',
+  },
+  {
+    id: 'habit-repeat',
+    type: 'spotlight',
+    target: 'missions',
+    titleKey: 'habitRepeat.title',
+    bodyKey: 'habitRepeat.body',
+    ctaKey: 'next',
+    advanceOn: 'next',
     route: 'dashboard',
   },
   {

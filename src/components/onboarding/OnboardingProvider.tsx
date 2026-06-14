@@ -36,6 +36,7 @@ type OnboardingContextValue = {
 const OnboardingContext = createContext<OnboardingContextValue | null>(null)
 
 function routeFromPathname(pathname: string): OnboardingRoute | null {
+  if (pathname.includes('/achievements')) return 'achievements'
   if (pathname.includes('/shop')) return 'shop'
   if (pathname.includes('/dashboard')) return 'dashboard'
   return null
@@ -157,6 +158,13 @@ export function OnboardingProvider({
       currentRoute === 'dashboard'
     ) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
+      const id = window.setTimeout(() => goToNextStep(), 0)
+      return () => window.clearTimeout(id)
+    }
+    if (
+      currentStep.advanceOn === 'navigate-achievements' &&
+      currentRoute === 'achievements'
+    ) {
       const id = window.setTimeout(() => goToNextStep(), 0)
       return () => window.clearTimeout(id)
     }

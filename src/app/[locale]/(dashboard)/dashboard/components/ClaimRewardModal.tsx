@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 
 import { Coins, Sparkles, Trophy } from 'lucide-react'
 
+import { AchievementIcon } from '@/components/achievements/AchievementIcon'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+import type { AchievementFrame } from '@/lib/achievements/definitions'
 import type { PendingRewardType } from '@/lib/pending-rewards'
 
 export type ClaimCelebration = {
@@ -19,6 +21,10 @@ export type ClaimCelebration = {
   xp: number
   type: PendingRewardType
   refLevel: number | null
+  refAchievementId?: string | null
+  refTier?: number | null
+  achievementIcon?: string | null
+  achievementFrame?: AchievementFrame | null
 } | null
 
 type ClaimRewardModalProps = {
@@ -31,21 +37,36 @@ export function ClaimRewardModal({
   onClose,
 }: ClaimRewardModalProps) {
   const t = useTranslations('dashboard.overview.missions')
+  const tAch = useTranslations('achievements')
   const open = celebration != null
+
+  const isAchievement = celebration?.type === 'ACHIEVEMENT'
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="border-amber-500/50 bg-gradient-to-br from-amber-500/20 via-yellow-500/15 to-orange-600/25 text-white backdrop-blur-xl sm:max-w-sm">
         <DialogHeader>
           <DialogTitle className="flex flex-col items-center gap-3 text-center text-xl">
-            <span className="reward-pop-badge flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 shadow-lg shadow-amber-500/40">
-              <Trophy className="h-8 w-8 text-white" />
-            </span>
-            {celebration?.type === 'LEVEL_UP'
-              ? t('claimLevelTitle', {
-                  level: celebration.refLevel ?? '',
-                })
-              : t('claimCelebrationTitle')}
+            {isAchievement && celebration?.achievementIcon ? (
+              <AchievementIcon
+                icon={celebration.achievementIcon}
+                frame={celebration.achievementFrame ?? 'gold'}
+                size="lg"
+                progress={100}
+                pulse
+              />
+            ) : (
+              <span className="reward-pop-badge flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 shadow-lg shadow-amber-500/40">
+                <Trophy className="h-8 w-8 text-white" />
+              </span>
+            )}
+            {isAchievement
+              ? tAch('claimTitle', { tier: celebration?.refTier ?? 1 })
+              : celebration?.type === 'LEVEL_UP'
+                ? t('claimLevelTitle', {
+                    level: celebration.refLevel ?? '',
+                  })
+                : t('claimCelebrationTitle')}
           </DialogTitle>
         </DialogHeader>
         {celebration && (

@@ -30,10 +30,16 @@ export function endOfMonth(year: number, month: number): Date {
   return new Date(year, month + 1, 0, 12, 0, 0, 0)
 }
 
-export function getActiveDateKeys(completedDueDates: Date[]): Set<string> {
+export function getActiveDateKeys(
+  completedDueDates: Date[],
+  frozenDates: string[] = []
+): Set<string> {
   const keys = new Set<string>()
   for (const dueAt of completedDueDates) {
     keys.add(toDateKey(dueAt))
+  }
+  for (const d of frozenDates) {
+    keys.add(d)
   }
   return keys
 }
@@ -114,9 +120,10 @@ export function buildStreakSummary(
   year: number,
   month: number,
   userLevel: number,
-  today = new Date()
+  today = new Date(),
+  frozenDates: string[] = []
 ) {
-  const activeDateKeys = getActiveDateKeys(completedDueDates)
+  const activeDateKeys = getActiveDateKeys(completedDueDates, frozenDates)
   const monthStart = startOfMonth(year, month)
   const monthEnd = endOfMonth(year, month)
   const activeDays = activeDaysInMonth(activeDateKeys, year, month, today)

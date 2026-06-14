@@ -19,6 +19,8 @@ export async function GET() {
         type: r.type,
         refLevel: r.refLevel,
         refDate: r.refDate,
+        refAchievementId: r.refAchievementId,
+        refTier: r.refTier,
         gold: r.gold,
         xp: r.xp,
       }))

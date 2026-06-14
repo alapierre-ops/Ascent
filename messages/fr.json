@@ -98,6 +98,7 @@
         "totalXP": "XP total",
         "next": "Prochaine étape"
       },
+      "achievements": "Succès",
       "level": {
         "allLevels": "Tous les niveaux",
         "description": "Voir tous les niveaux, récompenses et exigences",
@@ -180,6 +181,11 @@
         "dayToday": "Aujourd'hui",
         "dayYesterday": "Hier",
         "dayTomorrow": "Demain",
+        "openDayPicker": "Choisir une date",
+        "pickDate": "Choisir un jour",
+        "goToToday": "Revenir à aujourd'hui",
+        "prevMonth": "Mois précédent",
+        "nextMonth": "Mois suivant",
         "missionCount": "{count} missions",
         "missionCount_one": "{count} mission",
         "missionCount_other": "{count} missions",
@@ -202,6 +208,9 @@
         "claimGold": "+{gold} or",
         "claimXp": "+{xp} XP",
         "claimCta": "Super !",
+        "adBonus": "(bonus pub)",
+        "streakBonusBadge": "+{percent} %",
+        "xpWithBonus": "+{xp} XP (+{percent} %)",
         "dailyLoginRewardHint": "Récompense du jour",
         "weeklyXp": "XP de la semaine",
         "due": "Échéance",
@@ -256,6 +265,10 @@
         "cancel": "Annuler",
         "delete": "Supprimer",
         "deleteConfirm": "Supprimer cette mission ?",
+        "deleteScopeTitle": "Supprimer cette habitude ?",
+        "deleteScopeHint": "Tu peux retirer seulement aujourd'hui, ou arrêter la récurrence pour les jours suivants.",
+        "deleteTodayOnly": "Aujourd'hui seulement",
+        "deleteAllFuture": "Tous les jours suivants",
         "complete": "Valider",
         "uncomplete": "Remettre à faire",
         "categories": {
@@ -379,6 +392,15 @@
       "monthLongestStreak": "Plus longue série",
       "monthActiveDays": "Jours actifs",
       "daysUnit": "jours",
+      "bonusActive": "+{percent} % de bonus XP",
+      "bonusTitle": "Bonus XP",
+      "bonusPercent": "+{percent} %",
+      "bonusNone": "0 %",
+      "bonusRule": "Chaque semaine de série complète ajoute 10 % de bonus XP sur tes missions. Sans limite.",
+      "bonusNext": "+{percent} % dans {days} j",
+      "freezeTitle": "Boucliers streak",
+      "freezeDescription": "Protège ta série si tu rates un jour. Achète-en dans la boutique.",
+      "freezeUse": "Utiliser un bouclier",
       "weekdays": {
         "mon": "L",
         "tue": "M",
@@ -477,6 +499,112 @@
         "title": "Objet wishlist",
         "description": "Le gros achat plaisir que tu reportes depuis longtemps"
       }
+    },
+    "streakFreeze": {
+      "title": "Bouclier streak",
+      "description": "Sauve ta série si tu rates une journée. 1 utilisation.",
+      "purchaseSuccess": "Bouclier streak ajouté à ton inventaire !",
+      "purchaseFailed": "Impossible d'acheter le bouclier."
+    },
+    "sponsored": {
+      "badge": "Sponsorisé",
+      "title": "BetterHelp — Essai gratuit 7 jours",
+      "description": "Parle à un thérapeute certifié en ligne. Prends soin de ta santé mentale pendant ton ascension.",
+      "cta": "En savoir plus"
+    }
+  },
+  "achievements": {
+    "title": "Succès",
+    "back": "Tableau de bord",
+    "loading": "Chargement…",
+    "globalProgress": "Progression globale",
+    "tiersUnlocked": "{current} / {total} paliers",
+    "locked": "Verrouillé",
+    "tierProgress": "Palier {current}/{max}",
+    "progress": "Progression : {value}",
+    "nextAt": "Prochain palier : {threshold}",
+    "tiersTitle": "Paliers",
+    "tierLabel": "Palier {tier}",
+    "threshold": "Objectif : {count}",
+    "claim": "Récupérer",
+    "claimTitle": "Palier {tier} débloqué !",
+    "unlockTitle": "Nouveau palier !",
+    "unlockSubtitle": "Récompense disponible — récupère-la dans les détails du succès.",
+    "unlockCta": "Continuer",
+    "frames": {
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or"
+    },
+    "streakMaster": {
+      "name": "Maître des séries",
+      "description": "Maintiens une série de jours consécutifs"
+    },
+    "missionHunter": {
+      "name": "Chasseur de missions",
+      "description": "Termine des missions pour progresser"
+    },
+    "risingStar": {
+      "name": "Étoile montante",
+      "description": "Monte en niveau"
+    },
+    "goldCollector": {
+      "name": "Collectionneur d'or",
+      "description": "Accumule de l'or au fil de ta progression"
+    },
+    "dailyQuestHero": {
+      "name": "Héros de la quête",
+      "description": "Accomplis des quêtes quotidiennes"
+    },
+    "rewardSpender": {
+      "name": "Dépensier avisé",
+      "description": "Dépense ton or dans la boutique"
+    },
+    "consistency": {
+      "name": "Régularité",
+      "description": "Reste actif sur plusieurs jours"
+    },
+    "xpLegend": {
+      "name": "Légende XP",
+      "description": "Accumule de l'expérience"
+    },
+    "dailyLogin": {
+      "name": "Pionnier",
+      "description": "Connecte-toi régulièrement"
+    },
+    "weeklyGrinder": {
+      "name": "Marathonien",
+      "description": "Termine des missions chaque semaine"
+    },
+    "goalGetter": {
+      "name": "Objectifs en poche",
+      "description": "Termine des objectifs ponctuels"
+    },
+    "habitMachine": {
+      "name": "Machine à habitudes",
+      "description": "Valide tes habitudes jour après jour"
+    },
+    "perfectDay": {
+      "name": "Journée parfaite",
+      "description": "Termine au moins 3 missions dans la journée"
+    },
+    "rewardCreator": {
+      "name": "Créateur de rêves",
+      "description": "Crée des récompenses perso dans la boutique"
+    },
+    "freezeSaver": {
+      "name": "Gardien du gel",
+      "description": "Utilise des boucliers pour protéger ta série"
+    }
+  },
+  "ads": {
+    "label": "Publicité",
+    "playing": "Lecture en cours…",
+    "rewarded": {
+      "title": "Doubler ta récompense ?",
+      "description": "Regarde une courte pub pour doubler les XP de cette mission.",
+      "watch": "Regarder la pub",
+      "skip": "Non merci"
     }
   },
   "onboarding": {
@@ -498,7 +626,7 @@
     },
     "dailyLogin": {
       "title": "Récompense du jour",
-      "body": "Chaque jour, une petite récompense t'attend rien que pour ouvrir l'app. Appuie sur le cadeau pour la récupérer."
+      "body": "Chaque jour, une petite récompense t'attend quand tu ouvres l'app. Appuie sur le cadeau pour la récupérer."
     },
     "level": {
       "title": "Ton niveau",
@@ -513,12 +641,28 @@
       "body": "Appuie sur la flamme pour ouvrir ton calendrier de série et suivre ta régularité."
     },
     "streakModal": {
-      "title": "Calendrier de série",
-      "body": "Termine au moins une mission par jour pour garder ta série. Atteins 7 jours d'affilée pour débloquer des récompenses spéciales."
+      "title": "Série & bonus",
+      "body": "Chaque semaine de série complète augmente ton XP de +10 %. Les boucliers (cyan) sauvent ta série si tu rates un jour — achète-en dans la boutique."
+    },
+    "achievementsNav": {
+      "title": "Succès",
+      "body": "Le trophée rassemble tes succès : 15 défis avec 3 paliers chacun. Débloque-les, puis récupère tes récompenses quand le badge rouge apparaît."
+    },
+    "achievementsPage": {
+      "title": "Grille des succès",
+      "body": "Chaque succès a des paliers bronze, argent et or. Appuie sur un succès pour voir ta progression et récupérer tes gains."
+    },
+    "habitRepeat": {
+      "title": "Habitudes quotidiennes",
+      "body": "Les habitudes reviennent chaque jour automatiquement, pas besoin de les recréer. Si tu en as marre, supprime juste aujourd'hui ou toutes les occurrences futures."
     },
     "gold": {
       "title": "Ton or",
       "body": "L'or s'accumule au fil de ta progression. Dépense-le dans la boutique sur des récompenses que tu te fixes — un dessert, une sortie, un achat sympa."
+    },
+    "dayPicker": {
+      "title": "Navigue dans le temps",
+      "body": "Utilise les flèches pour passer d'un jour à l'autre, ou appuie sur la date pour ouvrir le calendrier et sauter directement à n'importe quel jour."
     },
     "missions": {
       "title": "Tes missions du jour",

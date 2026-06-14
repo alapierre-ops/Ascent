@@ -1,5 +1,14 @@
 export const SHOP_EXAMPLE_REWARDS = [
   {
+    id: 'ex-streak-freeze',
+    titleKey: 'streakFreeze.title',
+    descriptionKey: 'streakFreeze.description',
+    cost: 250,
+    categoryKey: 'categories.wellness',
+    icon: '🛡️',
+    systemType: 'STREAK_FREEZE' as const,
+  },
+  {
     id: 'ex-book',
     titleKey: 'examples.book.title',
     descriptionKey: 'examples.book.description',

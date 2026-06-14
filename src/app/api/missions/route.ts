@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
+import { newRepeatKey } from '@/lib/missions/recurrence'
 import { prisma } from '@/lib/prisma'
 import { createMissionSchema } from '@/lib/validation/mission'
 
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
         xp: m.xp,
         dueAt: m.dueAt.toISOString(),
         status: m.status,
+        repeatKey: m.repeatKey,
       }))
     )
   } catch (error) {
@@ -68,6 +70,7 @@ export async function POST(request: NextRequest) {
     const baseDueAt = new Date(dueAt)
     const repeatMode = repeat ?? 'NONE'
     const occurrences = repeatMode === 'NONE' ? 1 : (repeatCount ?? 14)
+    const repeatKey = repeatMode === 'NONE' ? null : newRepeatKey()
 
     const created = await prisma.$transaction(
       Array.from({ length: occurrences }).map((_, index) => {
@@ -86,6 +89,7 @@ export async function POST(request: NextRequest) {
             xp,
             dueAt: due,
             status: 'SCHEDULED',
+            repeatKey,
           },
         })
       })

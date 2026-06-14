@@ -28,6 +28,7 @@ type Rect = {
 const SPOTLIGHT_PADDING = 8
 
 function routeFromPathname(pathname: string): string | null {
+  if (pathname.includes('/achievements')) return 'achievements'
   if (pathname.includes('/shop')) return 'shop'
   if (pathname.includes('/dashboard')) return 'dashboard'
   return null
@@ -37,7 +38,8 @@ function isInteractiveStep(advanceOn: OnboardingAdvanceEvent) {
   return (
     advanceOn !== 'next' &&
     advanceOn !== 'navigate-shop' &&
-    advanceOn !== 'navigate-dashboard'
+    advanceOn !== 'navigate-dashboard' &&
+    advanceOn !== 'navigate-achievements'
   )
 }
 

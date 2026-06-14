@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { RewardedAdPrompt } from '@/components/ads/RewardedAdPrompt'
 import { useOnboardingOptional } from '@/components/onboarding/OnboardingProvider'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -59,6 +60,7 @@ import {
   type ClaimCelebration,
   ClaimRewardModal,
 } from './components/ClaimRewardModal'
+import { DayPickerDialog } from './components/DayPickerDialog'
 import { type MissionForModal, MissionModal } from './components/MissionModal'
 import { StreakModal } from './components/StreakModal'
 
@@ -98,6 +100,7 @@ export default function DashboardPage() {
 
   const [levelsDialogOpen, setLevelsDialogOpen] = useState(false)
   const [streakModalOpen, setStreakModalOpen] = useState(false)
+  const [dayPickerOpen, setDayPickerOpen] = useState(false)
   const [currentStreak, setCurrentStreak] = useState(0)
   const [avatarPickerOpen, setAvatarPickerOpen] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
@@ -132,6 +135,13 @@ export default function DashboardPage() {
     currency: number
   } | null>(null)
   const [userName, setUserName] = useState<string | null>(null)
+  const [streakBonusPercent, setStreakBonusPercent] = useState(0)
+  const [achievementPendingCount, setAchievementPendingCount] = useState(0)
+  const [adPrompt, setAdPrompt] = useState<{
+    missionId: string
+    bonusXp: number
+  } | null>(null)
+  const [xpBoostToast, setXpBoostToast] = useState<string | null>(null)
 
   const onboarding = useOnboardingOptional()
   const pendingOnboardingClaim = useRef<OnboardingAdvanceEvent | null>(null)
@@ -191,6 +201,10 @@ export default function DashboardPage() {
           xp: data.xp,
           type: data.type,
           refLevel: data.refLevel,
+          refAchievementId: data.refAchievementId,
+          refTier: data.refTier,
+          achievementIcon: data.achievementIcon,
+          achievementFrame: data.achievementFrame,
         })
         if (
           onboarding?.currentStep?.id === 'daily-login' &&
@@ -232,6 +246,9 @@ export default function DashboardPage() {
   const levelPendingCount = pendingRewards.filter(
     (r) => r.type === 'LEVEL_UP'
   ).length
+  const achievementPendingFromRewards = pendingRewards.filter(
+    (r) => r.type === 'ACHIEVEMENT'
+  ).length
 
   const goToPrevDay = useCallback(() => {
     const d = new Date(selectedDate + 'T12:00:00')
@@ -267,6 +284,30 @@ export default function DashboardPage() {
     })
   }, [selectedDate, locale, tMissions])
 
+  const selectedDateSublabel = useMemo(() => {
+    const today = new Date()
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`
+    if (
+      selectedDate !== todayStr &&
+      selectedDate !== yesterdayStr &&
+      selectedDate !== tomorrowStr
+    ) {
+      return null
+    }
+    const d = new Date(selectedDate + 'T12:00:00')
+    return d.toLocaleDateString(toBcp47Locale(locale), {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })
+  }, [selectedDate, locale])
+
   const completeMission = useCallback(
     async (missionId: string) => {
       setCompletingId(missionId)
@@ -281,10 +322,35 @@ export default function DashboardPage() {
           if (data.user) {
             setUserStats(data.user)
           }
+          if (data.bonusPercent != null) {
+            setStreakBonusPercent(data.bonusPercent)
+          }
+          if (data.effectiveXp != null && data.bonusPercent > 0) {
+            setXpBoostToast(
+              tMissions('xpWithBonus', {
+                xp: data.effectiveXp,
+                percent: data.bonusPercent,
+              })
+            )
+            setTimeout(() => setXpBoostToast(null), 2200)
+          }
+          if (!onboarding?.active && data.effectiveXp > 0 && data.id) {
+            setAdPrompt({
+              missionId: data.id,
+              bonusXp: data.effectiveXp,
+            })
+          }
           if (onboarding?.tutorialMissionId === missionId) {
             onboarding.signal('tutorial-completed')
           }
           await fetchPendingRewards()
+          void fetch('/api/achievements')
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => {
+              if (d?.pendingCount != null) {
+                setAchievementPendingCount(d.pendingCount)
+              }
+            })
           setJustCompletedMissionId(missionId)
           setTimeout(() => setJustCompletedMissionId(null), 1200)
           await fetchMissions()
@@ -293,7 +359,7 @@ export default function DashboardPage() {
         setCompletingId(null)
       }
     },
-    [fetchMissions, onboarding, fetchPendingRewards]
+    [fetchMissions, onboarding, fetchPendingRewards, tMissions]
   )
 
   const uncompleteMission = useCallback(
@@ -332,6 +398,21 @@ export default function DashboardPage() {
           })
         if (data?.image !== undefined) setUserAvatar(data.image ?? null)
         if (data?.name) setUserName(data.name)
+      })
+      .catch(() => {})
+    fetch('/api/streak')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
+        setCurrentStreak(data.currentStreak ?? 0)
+        setStreakBonusPercent(data.bonusPercent ?? 0)
+      })
+      .catch(() => {})
+    fetch('/api/achievements')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
+        setAchievementPendingCount(data.pendingCount ?? 0)
       })
       .catch(() => {})
     return () => {
@@ -452,6 +533,9 @@ export default function DashboardPage() {
       if (stepId !== 'streak' && stepId !== 'streak-modal') {
         setStreakModalOpen(false)
       }
+      if (stepId !== 'day-picker') {
+        setDayPickerOpen(false)
+      }
     }, 0)
     return () => window.clearTimeout(id)
   }, [onboarding?.active, onboarding?.currentStep?.id])
@@ -467,6 +551,12 @@ export default function DashboardPage() {
       onboarding.signal('streak-modal-opened')
     }
   }, [streakModalOpen, onboarding])
+
+  useEffect(() => {
+    if (dayPickerOpen && onboarding?.currentStep?.id === 'day-picker') {
+      onboarding.signal('day-picker-opened')
+    }
+  }, [dayPickerOpen, onboarding])
 
   useEffect(() => {
     const onTutorialReady = () => {
@@ -702,16 +792,38 @@ export default function DashboardPage() {
                   type="button"
                   data-onboarding="streak"
                   onClick={() => setStreakModalOpen(true)}
-                  className="flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
+                  className="relative flex items-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:gap-2 sm:px-4"
                   title={t('overview.streaks.days', {
                     count: currentStreak,
                   })}
                 >
+                  {streakBonusPercent > 0 && (
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-1.5 py-0 text-[9px] font-bold whitespace-nowrap text-slate-900">
+                      {tMissions('streakBonusBadge', {
+                        percent: streakBonusPercent,
+                      })}
+                    </span>
+                  )}
                   <Flame className="h-4 w-4 animate-pulse text-orange-200 sm:h-5 sm:w-5" />
                   <span className="text-lg font-bold sm:text-xl">
                     {currentStreak}
                   </span>
                 </button>
+
+                <Link
+                  href={`/${locale}/achievements`}
+                  data-onboarding="achievements"
+                  className="relative flex h-10 min-w-[2.75rem] items-center justify-center gap-1.5 rounded-xl bg-white/20 px-3 py-2 shadow-lg backdrop-blur-sm transition hover:bg-white/30 active:scale-95 sm:min-w-[3rem] sm:gap-2 sm:px-4"
+                  title={t('overview.achievements')}
+                >
+                  {(achievementPendingCount > 0 ||
+                    achievementPendingFromRewards > 0) && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 animate-pulse items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-lg">
+                      {achievementPendingCount || achievementPendingFromRewards}
+                    </span>
+                  )}
+                  <Trophy className="h-5 w-5 text-amber-200" />
+                </Link>
 
                 <Link
                   href={`/${locale}/shop`}
@@ -743,7 +855,10 @@ export default function DashboardPage() {
           {/* Missions — main landing content with day navigation */}
           <section data-onboarding="missions" className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
+              <div
+                data-onboarding="day-picker"
+                className="flex items-center gap-2 rounded-2xl"
+              >
                 <button
                   type="button"
                   onClick={goToPrevDay}
@@ -752,11 +867,21 @@ export default function DashboardPage() {
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <div className="min-w-[8rem] text-center">
+                <button
+                  type="button"
+                  onClick={() => setDayPickerOpen(true)}
+                  className="min-w-[8rem] rounded-xl px-2 py-1 text-center transition hover:bg-white/10 active:scale-[0.98]"
+                  aria-label={tMissions('openDayPicker')}
+                >
                   <h2 className="text-xl font-semibold text-white capitalize sm:text-2xl">
                     {selectedDateLabel}
                   </h2>
-                </div>
+                  {selectedDateSublabel && (
+                    <p className="mt-0.5 text-xs font-normal text-white/55 capitalize sm:text-sm">
+                      {selectedDateSublabel}
+                    </p>
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={goToNextDay}
@@ -1122,6 +1247,14 @@ export default function DashboardPage() {
         open={streakModalOpen}
         onOpenChange={setStreakModalOpen}
         onStreakChange={setCurrentStreak}
+        onBonusChange={setStreakBonusPercent}
+      />
+      <DayPickerDialog
+        open={dayPickerOpen}
+        onOpenChange={setDayPickerOpen}
+        selectedDate={selectedDate}
+        onSelectDate={setSelectedDate}
+        locale={locale}
       />
       <MissionModal
         open={missionModalOpen}
@@ -1144,6 +1277,36 @@ export default function DashboardPage() {
         celebration={claimCelebration}
         onClose={closeCelebration}
       />
+
+      <RewardedAdPrompt
+        open={adPrompt != null}
+        bonusXp={adPrompt?.bonusXp ?? 0}
+        missionId={adPrompt?.missionId ?? null}
+        onClose={() => setAdPrompt(null)}
+        onRewarded={(bonus) => {
+          setXpBoostToast(`+${bonus} XP ${tMissions('adBonus')}`)
+          setTimeout(() => setXpBoostToast(null), 2200)
+          void fetch('/api/user/me')
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => {
+              if (d?.level != null) {
+                setUserStats({
+                  level: d.level,
+                  xp: d.xp ?? 0,
+                  currency: d.currency ?? 0,
+                })
+              }
+            })
+        }}
+      />
+
+      {xpBoostToast && (
+        <div className="animate-in fade-in slide-in-from-bottom-4 pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+          <span className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-emerald-500/40">
+            {xpBoostToast}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

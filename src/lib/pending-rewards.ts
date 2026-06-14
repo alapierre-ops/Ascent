@@ -1,13 +1,19 @@
 import { DAILY_QUEST_BONUS_GOLD, DAILY_QUEST_BONUS_XP } from '@/lib/daily-quest'
 import { getLevel } from '@/lib/levels'
 
-export type PendingRewardType = 'LEVEL_UP' | 'DAILY_QUEST' | 'DAILY_LOGIN'
+export type PendingRewardType =
+  | 'LEVEL_UP'
+  | 'DAILY_QUEST'
+  | 'DAILY_LOGIN'
+  | 'ACHIEVEMENT'
 
 export type PendingRewardDto = {
   id: string
   type: PendingRewardType
   refLevel: number | null
   refDate: string | null
+  refAchievementId: string | null
+  refTier: number | null
   gold: number
   xp: number
 }
