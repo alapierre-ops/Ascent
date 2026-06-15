@@ -11,6 +11,7 @@ export async function POST() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const userId = session.user.id
     const now = new Date()
     const todayStart = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
@@ -20,7 +21,7 @@ export async function POST() {
 
     const existingCount = await prisma.mission.count({
       where: {
-        userId: session.user.id,
+        userId,
         dueAt: { gte: todayStart, lt: todayEnd },
       },
     })
@@ -35,7 +36,7 @@ export async function POST() {
         const dueAt = new Date(now)
         dueAt.setHours(mission.hour, 0, 0, 0)
         return {
-          userId: session.user.id,
+          userId,
           title: mission.title,
           category: mission.category,
           type: mission.type,

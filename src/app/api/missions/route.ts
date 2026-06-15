@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const userId = session.user.id
     const { title, category, type, xp, dueAt, repeat, repeatCount } =
       parsed.data
     const baseDueAt = new Date(dueAt)
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
         }
         return prisma.mission.create({
           data: {
-            userId: session.user.id,
+            userId,
             title,
             category,
             type,

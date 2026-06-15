@@ -12,15 +12,16 @@ export async function GET() {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = session.user.id
 
     const [user, customRewards, history] = await Promise.all([
       prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: userId },
         select: { currency: true },
       }),
       prisma.reward.findMany({
         where: {
-          OR: [{ creatorId: session.user.id }, { creatorId: null }],
+          OR: [{ creatorId: userId }, { creatorId: null }],
         },
         orderBy: [{ creatorId: 'asc' }, { cost: 'asc' }],
         select: {
@@ -33,7 +34,7 @@ export async function GET() {
         },
       }),
       prisma.userReward.findMany({
-        where: { userId: session.user.id },
+        where: { userId },
         orderBy: { purchasedAt: 'desc' },
         take: 20,
         select: {
@@ -55,7 +56,7 @@ export async function GET() {
       balance: user?.currency ?? 0,
       rewards: customRewards.map((reward) => ({
         ...reward,
-        isEditable: reward.creatorId === session.user.id,
+        isEditable: reward.creatorId === userId,
       })),
       history: history.map((item) => ({
         id: item.id,
