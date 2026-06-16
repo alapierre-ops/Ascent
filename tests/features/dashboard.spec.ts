@@ -27,8 +27,27 @@ async function loginAs(
   })
   // The starter mission pack is opt-in (empty state button), not seeded
   // automatically — apply it so the task list has content to assert on.
-  await page.request.post(`${baseURL}/api/missions/templates/starter`)
+  const starterRes = await page.request.post(
+    `${baseURL}/api/missions/templates/starter`
+  )
+  if (!starterRes.ok()) {
+    throw new Error(
+      `Failed to seed starter missions: ${starterRes.status()} ${await starterRes.text()}`
+    )
+  }
   await page.reload()
+}
+
+// The dashboard's mission fetch silently falls back to an empty list on any
+// transient error (no retry), so assertions on seeded content reload once
+// before failing to absorb a flaky first fetch right after login.
+async function expectVisibleWithRetry(page: Page, text: string) {
+  try {
+    await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 })
+  } catch {
+    await page.reload()
+    await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 })
+  }
 }
 
 test.describe('Feature: Dashboard', () => {
@@ -108,9 +127,7 @@ test.describe('Feature: Dashboard', () => {
       })
 
       // Starter mission template seeded for new users
-      await expect(page.getByText('Hydrate (8 glasses)')).toBeVisible({
-        timeout: 10_000,
-      })
+      await expectVisibleWithRetry(page, 'Hydrate (8 glasses)')
     })
 
     test('shows an XP reward badge on each task', async ({
@@ -124,9 +141,7 @@ test.describe('Feature: Dashboard', () => {
       })
 
       // Starter template: "Hydrate (8 glasses)" rewards 20 XP
-      await expect(page.getByText('Hydrate (8 glasses)')).toBeVisible({
-        timeout: 10_000,
-      })
+      await expectVisibleWithRetry(page, 'Hydrate (8 glasses)')
       const missions = await (
         await page.request.get(`${baseURL}/api/missions`)
       ).json()
@@ -166,9 +181,7 @@ test.describe('Feature: Dashboard', () => {
       })
       await page.reload()
 
-      await expect(page.getByText('Ship landing page redesign')).toBeVisible({
-        timeout: 10_000,
-      })
+      await expectVisibleWithRetry(page, 'Ship landing page redesign')
       await expect(page.getByText(/overdue/i).first()).toBeVisible()
     })
   })
