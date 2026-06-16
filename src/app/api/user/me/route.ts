@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getThemeState, setActiveTheme } from '@/lib/themes/service'
 
 export async function GET() {
   try {
@@ -13,23 +14,27 @@ export async function GET() {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
-        name: true,
-        image: true,
+        email: true,
         level: true,
         xp: true,
         currency: true,
+        onboardingCompletedAt: true,
       },
     })
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    const themeState = await getThemeState(prisma, session.user.id)
+
     return NextResponse.json({
-      name: user.name,
-      image: user.image,
+      email: user.email,
+      themeId: themeState.themeId,
+      unlockedThemeIds: themeState.unlockedThemeIds,
       level: user.level,
       xp: user.xp,
       currency: user.currency,
+      onboardingCompleted: user.onboardingCompletedAt != null,
     })
   } catch (error) {
     console.error('User me GET error:', error)
@@ -48,26 +53,35 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const image =
-      body.image === undefined
+    const themeId =
+      body.themeId === undefined
         ? undefined
-        : body.image === null || body.image === ''
-          ? null
-          : typeof body.image === 'string'
-            ? body.image
-            : undefined
+        : typeof body.themeId === 'string'
+          ? body.themeId
+          : undefined
 
-    if (image === undefined) {
+    const markOnboardingComplete = body.onboardingCompleted === true
+
+    if (themeId === undefined && !markOnboardingComplete) {
       return NextResponse.json(
-        { error: 'Invalid body: image must be a string or null' },
+        { error: 'Invalid body: themeId must be a string' },
         { status: 400 }
       )
     }
 
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { image },
-    })
+    if (themeId !== undefined) {
+      const result = await setActiveTheme(prisma, session.user.id, themeId)
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error }, { status: 400 })
+      }
+    }
+
+    if (markOnboardingComplete) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: { onboardingCompletedAt: new Date() },
+      })
+    }
 
     return NextResponse.json({ ok: true })
   } catch (error) {

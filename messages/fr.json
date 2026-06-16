@@ -82,7 +82,9 @@
   },
   "dashboard": {
     "title": "Tableau de bord",
-    "welcome": "Bon retour, {name}",
+    "welcome": "Bon retour",
+    "themeButton": "Personnaliser le thème",
+    "settingsButton": "Paramètres",
     "tabs": {
       "overview": "Vue d'ensemble",
       "goals": "Objectifs & Habitudes",
@@ -98,6 +100,7 @@
         "totalXP": "XP total",
         "next": "Prochaine étape"
       },
+      "achievements": "Succès",
       "level": {
         "allLevels": "Tous les niveaux",
         "description": "Voir tous les niveaux, récompenses et exigences",
@@ -115,7 +118,7 @@
           "title": "Niveau supérieur !",
           "level": "Niveau {level}",
           "rewardGold": "+{gold} or",
-          "avatarsUnlocked": "Nouveaux avatars débloqués !"
+          "themesUnlocked": "Nouveau thème débloqué !"
         },
         "rewards": {
           "1": "Premiers pas",
@@ -180,6 +183,11 @@
         "dayToday": "Aujourd'hui",
         "dayYesterday": "Hier",
         "dayTomorrow": "Demain",
+        "openDayPicker": "Choisir une date",
+        "pickDate": "Choisir un jour",
+        "goToToday": "Revenir à aujourd'hui",
+        "prevMonth": "Mois précédent",
+        "nextMonth": "Mois suivant",
         "missionCount": "{count} missions",
         "missionCount_one": "{count} mission",
         "missionCount_other": "{count} missions",
@@ -191,8 +199,21 @@
         "loading": "Chargement des missions…",
         "dailyQuestTitle": "Quête du jour",
         "dailyQuestProgress": "{completed}/{target} missions terminées",
-        "weeklyCompleted": "Semaine terminée",
-        "weeklyScheduled": "Semaine planifiée",
+        "dailyQuestReward": "Termine {target} missions aujourd'hui → +{xp} XP et +{gold} or",
+        "dailyQuestClaimed": "Quête du jour accomplie ! Bonus récupéré.",
+        "weeklyCompleted": "Terminées cette semaine",
+        "weeklyScheduled": "Planifiées cette semaine",
+        "claimReward": "Récupérer",
+        "claimDailyQuest": "Récupérer le bonus",
+        "claimCelebrationTitle": "Récompense récupérée !",
+        "claimLevelTitle": "Récompense niveau {level} !",
+        "claimGold": "+{gold} or",
+        "claimXp": "+{xp} XP",
+        "claimCta": "Super !",
+        "adBonus": "(bonus pub)",
+        "streakBonusBadge": "+{percent} %",
+        "xpWithBonus": "+{xp} XP (+{percent} %)",
+        "dailyLoginRewardHint": "Récompense du jour",
         "weeklyXp": "XP de la semaine",
         "due": "Échéance",
         "status": {
@@ -214,11 +235,20 @@
         "categoryLabel": "Catégorie",
         "categoryPlaceholder": "Fitness, Apprentissage, Productivité…",
         "typeLabel": "Type",
-        "xpLabel": "Récompense XP",
+        "typeHintHabit": "Une routine à répéter — idéal pour ancrer un comportement (ex. boire de l'eau, lire).",
+        "typeHintGoal": "Une tâche ponctuelle à cocher — idéal pour un livrable précis (ex. finir un rapport).",
+        "difficultyLabel": "Difficulté",
+        "xpLabel": "Difficulté",
         "difficultyEasy": "Facile",
         "difficultyMedium": "Moyen",
         "difficultyHard": "Difficile",
-        "xpAutoHint": "Récompense auto : {xp} XP",
+        "xpAutoHint": "{xp} XP",
+        "templates": {
+          "hydrate": "S'hydrater (8 verres)",
+          "workout": "30 min de sport",
+          "deepWork": "Sprint deep work (45 min)",
+          "read": "Lire 20 minutes"
+        },
         "dueLabel": "Échéance",
         "dueFriendlyToday": "Aujourd'hui à {time}",
         "dueFriendlyYesterday": "Hier à {time}",
@@ -237,6 +267,10 @@
         "cancel": "Annuler",
         "delete": "Supprimer",
         "deleteConfirm": "Supprimer cette mission ?",
+        "deleteScopeTitle": "Supprimer cette habitude ?",
+        "deleteScopeHint": "Tu peux retirer seulement aujourd'hui, ou arrêter la récurrence pour les jours suivants.",
+        "deleteTodayOnly": "Aujourd'hui seulement",
+        "deleteAllFuture": "Tous les jours suivants",
         "complete": "Valider",
         "uncomplete": "Remettre à faire",
         "categories": {
@@ -335,26 +369,40 @@
         "exportData": "Exporter les données"
       }
     },
-    "avatarPicker": {
-      "title": "Choisissez votre avatar",
-      "description": "Sélectionnez un avatar prédéfini. Débloquez-en d'autres en montant de niveau.",
+    "themePicker": {
+      "title": "Choisissez votre thème",
+      "description": "Personnalisez l'apparence de l'app. Débloquez de nouveaux thèmes via les niveaux, séries et succès.",
       "preview": "Aperçu",
-      "unlockAtLevel": "Débloquer au niveau {level}",
       "actions": {
         "save": "Enregistrer",
-        "cancel": "Annuler",
-        "remove": "Retirer l'avatar"
+        "cancel": "Annuler"
       }
     },
     "streakModal": {
       "share": "Partager",
+      "loading": "Chargement...",
       "streakTitle": "Série de {count} jours !",
       "goalTitle": "Objectif de streak",
       "goalProgress": "{current} / {target} jours",
       "goalUnlock": "Atteins une série de 7 jours pour débloquer des récompenses exclusives.",
+      "themeObjectivesTitle": "Objectifs thèmes",
+      "themeObjectiveLevelTitle": "Niveau {level}",
+      "themeObjectiveStreakTitle": "Série de {days} jours",
+      "themeObjectiveDescription": "Débloque le thème {themeId}",
+      "themeObjectiveLocked": "Niv. {current} / {level}",
+      "themeObjectiveStreakLocked": "{current} / {days} jours",
       "monthLongestStreak": "Plus longue série",
       "monthActiveDays": "Jours actifs",
       "daysUnit": "jours",
+      "bonusActive": "+{percent} % de bonus XP",
+      "bonusTitle": "Bonus XP",
+      "bonusPercent": "+{percent} %",
+      "bonusNone": "0 %",
+      "bonusRule": "Chaque semaine de série complète ajoute 10 % de bonus XP sur tes missions. Sans limite.",
+      "bonusNext": "+{percent} % dans {days} j",
+      "freezeTitle": "Boucliers streak",
+      "freezeDescription": "Protège ta série si tu rates un jour. Achète-en dans la boutique.",
+      "freezeUse": "Utiliser un bouclier",
       "weekdays": {
         "mon": "L",
         "tue": "M",
@@ -453,6 +501,328 @@
         "title": "Objet wishlist",
         "description": "Le gros achat plaisir que tu reportes depuis longtemps"
       }
+    },
+    "streakFreeze": {
+      "title": "Bouclier streak",
+      "description": "Sauve ta série si tu rates une journée. 1 utilisation.",
+      "purchaseSuccess": "Bouclier streak ajouté à ton inventaire !",
+      "purchaseFailed": "Impossible d'acheter le bouclier."
+    },
+    "sponsored": {
+      "badge": "Sponsorisé",
+      "title": "BetterHelp — Essai gratuit 7 jours",
+      "description": "Parle à un thérapeute certifié en ligne. Prends soin de ta santé mentale pendant ton ascension.",
+      "cta": "En savoir plus"
+    }
+  },
+  "achievements": {
+    "title": "Succès",
+    "back": "Tableau de bord",
+    "loading": "Chargement…",
+    "globalProgress": "Progression globale",
+    "tiersUnlocked": "{current} / {total} paliers",
+    "locked": "Verrouillé",
+    "tierProgress": "Palier {current}/{max}",
+    "progress": "Progression : {value}",
+    "nextAt": "Prochain palier : {threshold}",
+    "tiersTitle": "Paliers",
+    "tierLabel": "Palier {tier}",
+    "threshold": "Objectif : {count}",
+    "claim": "Récupérer",
+    "claimTitle": "Palier {tier} débloqué !",
+    "unlockTitle": "Nouveau palier !",
+    "unlockSubtitle": "Récompense disponible — récupère-la dans les détails du succès.",
+    "unlockCta": "Continuer",
+    "frames": {
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or",
+      "diamond": "Diamant",
+      "ruby": "Rubis",
+      "emerald": "Émeraude",
+      "sapphire": "Saphir",
+      "amethyst": "Améthyste",
+      "topaz": "Topaze"
+    },
+    "streakMaster": {
+      "name": "Maître des séries",
+      "description": "Maintiens une série de jours consécutifs"
+    },
+    "missionHunter": {
+      "name": "Chasseur de missions",
+      "description": "Termine des missions pour progresser"
+    },
+    "risingStar": {
+      "name": "Étoile montante",
+      "description": "Monte en niveau"
+    },
+    "goldCollector": {
+      "name": "Collectionneur d'or",
+      "description": "Accumule de l'or au fil de ta progression"
+    },
+    "dailyQuestHero": {
+      "name": "Héros de la quête",
+      "description": "Accomplis des quêtes quotidiennes"
+    },
+    "rewardSpender": {
+      "name": "Dépensier avisé",
+      "description": "Dépense ton or dans la boutique"
+    },
+    "consistency": {
+      "name": "Régularité",
+      "description": "Reste actif sur plusieurs jours"
+    },
+    "xpLegend": {
+      "name": "Légende XP",
+      "description": "Accumule de l'expérience"
+    },
+    "dailyLogin": {
+      "name": "Pionnier",
+      "description": "Connecte-toi régulièrement"
+    },
+    "weeklyGrinder": {
+      "name": "Marathonien",
+      "description": "Termine des missions chaque semaine"
+    },
+    "goalGetter": {
+      "name": "Objectifs en poche",
+      "description": "Termine des objectifs ponctuels"
+    },
+    "habitMachine": {
+      "name": "Machine à habitudes",
+      "description": "Valide tes habitudes jour après jour"
+    },
+    "perfectDay": {
+      "name": "Journée parfaite",
+      "description": "Termine au moins 3 missions dans la journée"
+    },
+    "rewardCreator": {
+      "name": "Créateur de rêves",
+      "description": "Crée des récompenses perso dans la boutique"
+    },
+    "freezeSaver": {
+      "name": "Gardien du gel",
+      "description": "Utilise des boucliers pour protéger ta série"
+    }
+  },
+  "ads": {
+    "label": "Publicité",
+    "playing": "Lecture en cours…",
+    "rewarded": {
+      "title": "Doubler ta récompense ?",
+      "description": "Regarde une courte pub pour doubler les XP de cette mission.",
+      "watch": "Regarder la pub",
+      "skip": "Non merci"
+    }
+  },
+  "onboarding": {
+    "progress": "{percent} %",
+    "next": "Suivant",
+    "skip": "Passer le tutoriel",
+    "welcome": {
+      "title": "Bienvenue sur Ascent !",
+      "body": "On va te faire découvrir l'app pas à pas et t'aider à créer tes premières missions. Ça ne prend que quelques minutes.",
+      "cta": "C'est parti"
+    },
+    "playerBar": {
+      "title": "Ton centre de commande",
+      "body": "Toute ta progression est ici — profil, niveau, série et or."
+    },
+    "theme": {
+      "title": "Tes thèmes",
+      "body": "Appuie ici pour changer l'apparence de l'app. De nouveaux thèmes se débloquent en progressant."
+    },
+    "dailyLogin": {
+      "title": "Récompense du jour",
+      "body": "Chaque jour, une petite récompense t'attend quand tu ouvres l'app. Appuie sur le cadeau pour la récupérer."
+    },
+    "level": {
+      "title": "Ton niveau",
+      "body": "Appuie ici pour voir l'échelle des niveaux. Un badge rouge apparaît quand des récompenses sont prêtes."
+    },
+    "levelModal": {
+      "title": "Échelle des niveaux",
+      "body": "Quand tu montes de niveau, les récompenses brillent ici — appuie sur Récupérer pour collecter ton or. Rien n'est donné automatiquement !"
+    },
+    "streak": {
+      "title": "Ta série",
+      "body": "Appuie sur la flamme pour ouvrir ton calendrier de série et suivre ta régularité."
+    },
+    "streakModal": {
+      "title": "Série & bonus",
+      "body": "Chaque semaine de série complète augmente ton XP de +10 %. Les boucliers (cyan) sauvent ta série si tu rates un jour — achète-en dans la boutique."
+    },
+    "achievementsNav": {
+      "title": "Succès",
+      "body": "Le trophée rassemble tes succès : 15 défis avec 4 paliers chacun. Débloque-les, puis récupère tes récompenses quand le badge rouge apparaît."
+    },
+    "achievementsPage": {
+      "title": "Grille des succès",
+      "body": "Chaque succès a des paliers bronze, argent, or et gemme (diamant, rubis, émeraude…). Appuie sur un succès pour voir ta progression et récupérer tes gains."
+    },
+    "habitRepeat": {
+      "title": "Habitudes quotidiennes",
+      "body": "Les habitudes reviennent chaque jour automatiquement, pas besoin de les recréer. Si tu en as marre, supprime juste aujourd'hui ou toutes les occurrences futures."
+    },
+    "gold": {
+      "title": "Ton or",
+      "body": "L'or s'accumule au fil de ta progression. Dépense-le dans la boutique sur des récompenses que tu te fixes — un dessert, une sortie, un achat sympa."
+    },
+    "dayPicker": {
+      "title": "Navigue dans le temps",
+      "body": "Utilise les flèches pour passer d'un jour à l'autre, ou appuie sur la date pour ouvrir le calendrier et sauter directement à n'importe quel jour."
+    },
+    "missions": {
+      "title": "Tes missions du jour",
+      "body": "Chaque mission cochée te rapproche de tes objectifs. La régularité compte plus que la perfection : quelques actions chaque jour, et ça change tout."
+    },
+    "addMission": {
+      "title": "Crée ta première mission",
+      "body": "À ton tour — appuie ici et ajoute une habitude ou un objectif qui compte pour toi."
+    },
+    "dailyQuest": {
+      "title": "Quête quotidienne",
+      "body": "Termine 3 missions dans la journée et débloque un bonus XP et de l'or. Petit effort régulier, gros impact sur ta progression."
+    },
+    "shopNav": {
+      "title": "Visite la boutique",
+      "body": "Appuie sur ton solde d'or pour ouvrir la boutique — c'est là que tu crées des récompenses sur lesquelles dépenser ton or."
+    },
+    "createReward": {
+      "title": "Crée une récompense perso",
+      "body": "Nomme quelque chose que tu aimerais — un plaisir, une activité, un achat — et fixe son coût en or."
+    },
+    "backDashboard": {
+      "title": "Retour aux missions",
+      "body": "Retourne au tableau de bord. Une dernière chose t'attend : terminer ta mission tutoriel."
+    },
+    "completeTutorial": {
+      "title": "Termine ta mission tutoriel",
+      "body": "Appuie sur la coche pour valider. Compléter une mission donne de l'XP — celle-ci pourrait même te faire monter de niveau !"
+    },
+    "claimLevel": {
+      "title": "Tu as monté de niveau !",
+      "body": "Le badge rouge signale une récompense prête. Appuie sur ton niveau pour voir ce qui t'attend."
+    },
+    "claimLevelModal": {
+      "title": "Ouvre ta récompense",
+      "body": "Ton nouveau niveau est débloqué. Récupère ton or — tu pourras le dépenser dans la boutique."
+    },
+    "chooseTheme": {
+      "title": "Essaie ton nouveau thème",
+      "body": "Tu as débloqué le mode clair ! Ouvre le sélecteur de thèmes et essaie-le."
+    },
+    "done": {
+      "title": "Tu es prêt !",
+      "body": "Tu sais comment fonctionnent les missions, l'XP, l'or et les récompenses. Maintenant, vise le sommet !",
+      "cta": "Commencer l'ascension"
+    }
+  },
+  "themes": {
+    "unlockTitle": "Nouveau thème débloqué !",
+    "tryNow": "Essayer maintenant",
+    "dark": {
+      "name": "Sombre",
+      "description": "Noir profond avec nébuleuses rose et violet électriques."
+    },
+    "lava": {
+      "name": "Lave",
+      "description": "Magma en fusion et obsidienne — chaleur volcanique qui pulse et brille."
+    },
+    "crimson": {
+      "name": "Cramoisi",
+      "description": "Rouge sang sur noir pur — agressif et intense."
+    },
+    "ocean": {
+      "name": "Océan",
+      "description": "Bleus abyssaux bioluminescents des profondeurs."
+    },
+    "midnight": {
+      "name": "Minuit",
+      "description": "Violet du vide avec accents bleu électrique."
+    },
+    "rainbow": {
+      "name": "Arc-en-ciel",
+      "description": "Chaos spectrale — rouge, jaune, bleu en mouvement."
+    },
+    "aurora": {
+      "name": "Aurore",
+      "description": "Magenta, violet et cyan électriques — sans vert."
+    },
+    "neon": {
+      "name": "Néon",
+      "description": "Cyberpunk rose fluo et vert acide sur noir."
+    },
+    "prism": {
+      "name": "Prisme",
+      "description": "Iridescence holographique — débloque un palier gemme."
+    },
+    "ascended": {
+      "name": "Ascension",
+      "description": "Lumière cosmique dorée — débloque tous les autres thèmes."
+    },
+    "unlockSource": {
+      "default": "Toujours disponible",
+      "level": "Niveau {level}",
+      "streak": "Série de {days} jours",
+      "achievement": "Palier {tier} du succès",
+      "achievementAny": "N'importe quel palier gemme",
+      "allThemes": "Tous les thèmes ({count})"
+    },
+    "unlockDetail": {
+      "default": "Ce thème est disponible dès le départ.",
+      "level": "Atteins le niveau {level} pour débloquer ce thème.",
+      "streak": "Maintiens une série de {days} jours pour débloquer ce thème.",
+      "achievement": "Atteins le succès « {achievement} » (palier {tier}) pour débloquer ce thème.",
+      "achievementAny": "Atteins le palier {tier} sur n'importe quel succès (diamant, rubis, émeraude…) pour débloquer ce thème.",
+      "allThemes": "Débloque les {count} autres thèmes pour obtenir ce thème ultime."
+    }
+  },
+  "juice": {
+    "levelUp": "Niveau supérieur !",
+    "levelNumber": "Niveau {level}",
+    "dailyQuestReady": "Quête du jour terminée — récupère ta récompense !",
+    "shopRedeemTitle": "Récompense échangée !",
+    "shopRedeemCost": "-{cost} or",
+    "shopRedeemCta": "Super !",
+    "soundMute": "Couper le son",
+    "soundUnmute": "Activer le son"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Personnalise ton expérience Ascent",
+    "back": "Tableau de bord",
+    "preferences": {
+      "title": "Préférences",
+      "sound": "Effets sonores",
+      "soundDescription": "Sons pour les missions, récompenses et célébrations",
+      "animations": "Animations",
+      "animationsDescription": "Confettis, XP flottant et effets de mouvement"
+    },
+    "appearance": {
+      "title": "Apparence",
+      "description": "Change les couleurs et débloque de nouveaux thèmes en progressant",
+      "customizeTheme": "Personnaliser le thème"
+    },
+    "language": {
+      "title": "Langue",
+      "en": "English",
+      "fr": "Français"
+    },
+    "redeem": {
+      "title": "Code promo",
+      "description": "Entre un code promo ou d'accès",
+      "placeholder": "Entrer le code",
+      "submit": "Valider",
+      "success": "Code validé ! Tous les thèmes et succès sont débloqués.",
+      "invalid": "Code invalide. Réessaie.",
+      "unavailable": "La validation de code n'est pas disponible pour le moment.",
+      "error": "Une erreur est survenue. Réessaie."
+    },
+    "account": {
+      "title": "Compte",
+      "email": "E-mail",
+      "signOut": "Se déconnecter"
     }
   }
 }

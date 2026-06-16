@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+import { toBcp47Locale } from '@/lib/locale'
+import { isRecurringHabit } from '@/lib/missions/recurrence'
 import { cn } from '@/lib/utils'
 
 const CATEGORIES = [
@@ -34,25 +36,25 @@ const CATEGORIES = [
 
 const QUICK_TEMPLATES = [
   {
-    title: 'Hydrate (8 glasses)',
+    id: 'hydrate',
     category: 'Health',
     type: 'HABIT' as const,
     xp: 20,
   },
   {
-    title: '30 min workout',
+    id: 'workout',
     category: 'Fitness',
     type: 'HABIT' as const,
     xp: 45,
   },
   {
-    title: 'Deep work sprint (45 min)',
+    id: 'deepWork',
     category: 'Productivity',
     type: 'GOAL' as const,
     xp: 60,
   },
   {
-    title: 'Read 20 minutes',
+    id: 'read',
     category: 'Learning',
     type: 'HABIT' as const,
     xp: 30,
@@ -67,6 +69,7 @@ export type MissionForModal = {
   xp: number
   dueAt: string
   status: string
+  repeatKey?: string | null
 }
 
 function toDateTimeLocal(iso: string): string {
@@ -88,7 +91,7 @@ function formatTimeForDisplay(dateTimeLocal: string, locale: string): string {
     const m = d.getMinutes()
     return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
   }
-  return d.toLocaleTimeString(locale, {
+  return d.toLocaleTimeString(toBcp47Locale(locale), {
     hour: 'numeric',
     minute: d.getMinutes() ? '2-digit' : undefined,
     hour12: true,
@@ -119,7 +122,7 @@ function formatDueFriendly(
   if (dueDate.getTime() === tomorrow.getTime()) {
     return t('dueFriendlyTomorrow', { time })
   }
-  const date = d.toLocaleDateString(locale, {
+  const date = d.toLocaleDateString(toBcp47Locale(locale), {
     day: 'numeric',
     month: 'short',
     year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
@@ -132,6 +135,7 @@ type MissionModalProps = {
   onOpenChange: (open: boolean) => void
   mission: MissionForModal | null
   onSuccess: () => void
+  onCreated?: () => void
 }
 
 export function MissionModal({
@@ -139,11 +143,13 @@ export function MissionModal({
   onOpenChange,
   mission,
   onSuccess,
+  onCreated,
 }: MissionModalProps) {
   const locale = useLocale()
   const t = useTranslations('dashboard.overview.missionModal')
   const tMissions = useTranslations('dashboard.overview.missions')
   const isEdit = !!mission
+  const inputLang = locale.startsWith('fr') ? 'fr-FR' : 'en'
 
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
@@ -157,6 +163,7 @@ export function MissionModal({
   const [editingDue, setEditingDue] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteChoiceOpen, setDeleteChoiceOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const dueDatePart = dueDateTime ? dueDateTime.slice(0, 10) : ''
@@ -233,6 +240,7 @@ export function MissionModal({
           const data = await res.json().catch(() => ({}))
           throw new Error(data.error || 'Failed to create')
         }
+        onCreated?.()
       }
       onSuccess()
       onOpenChange(false)
@@ -243,15 +251,17 @@ export function MissionModal({
     }
   }
 
-  const handleDelete = async () => {
-    if (!mission || !confirm(t('deleteConfirm'))) return
+  const handleDelete = async (scope: 'single' | 'future') => {
+    if (!mission) return
     setDeleting(true)
     setError(null)
     try {
-      const res = await fetch(`/api/missions/${mission.id}`, {
-        method: 'DELETE',
-      })
+      const res = await fetch(
+        `/api/missions/${mission.id}?scope=${scope === 'future' ? 'future' : 'single'}`,
+        { method: 'DELETE' }
+      )
       if (!res.ok) throw new Error('Failed to delete')
+      setDeleteChoiceOpen(false)
       onSuccess()
       onOpenChange(false)
     } catch (err) {
@@ -259,6 +269,16 @@ export function MissionModal({
     } finally {
       setDeleting(false)
     }
+  }
+
+  const onDeleteClick = () => {
+    if (!mission) return
+    if (isRecurringHabit(mission)) {
+      setDeleteChoiceOpen(true)
+      return
+    }
+    if (!confirm(t('deleteConfirm'))) return
+    void handleDelete('single')
   }
 
   return (
@@ -287,14 +307,15 @@ export function MissionModal({
               <div className="flex flex-wrap gap-2 pt-1">
                 {QUICK_TEMPLATES.map((template) => (
                   <button
-                    key={template.title}
+                    key={template.id}
                     type="button"
                     className="rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-xs text-white/80 transition hover:bg-white/10"
                     onClick={() => {
-                      setTitle(template.title)
+                      setTitle(t(`templates.${template.id}`))
                       setCategory(template.category)
                       setType(template.type)
                       setXp(template.xp)
+                      setRepeat(template.type === 'HABIT' ? 'DAILY' : 'NONE')
                       setDifficulty(
                         template.xp >= 60
                           ? 'hard'
@@ -304,7 +325,7 @@ export function MissionModal({
                       )
                     }}
                   >
-                    {template.title}
+                    {t(`templates.${template.id}`)}
                   </button>
                 ))}
               </div>
@@ -341,7 +362,13 @@ export function MissionModal({
             <Label>{t('typeLabel')}</Label>
             <Select
               value={type}
-              onValueChange={(v) => setType(v as 'HABIT' | 'GOAL')}
+              onValueChange={(v) => {
+                const nextType = v as 'HABIT' | 'GOAL'
+                setType(nextType)
+                if (!isEdit) {
+                  setRepeat(nextType === 'HABIT' ? 'DAILY' : 'NONE')
+                }
+              }}
             >
               <SelectTrigger className="w-full border-white/20 bg-white/10 text-white">
                 <SelectValue />
@@ -366,9 +393,12 @@ export function MissionModal({
                 </SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-white/60">
+              {type === 'HABIT' ? t('typeHintHabit') : t('typeHintGoal')}
+            </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="mission-xp">{t('xpLabel')}</Label>
+            <Label htmlFor="mission-xp">{t('difficultyLabel')}</Label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { key: 'easy', value: 20, label: t('difficultyEasy') },
@@ -431,6 +461,7 @@ export function MissionModal({
                 <Input
                   id="mission-due-date"
                   type="date"
+                  lang={inputLang}
                   value={dueDatePart}
                   onChange={(e) => setDueFromParts(e.target.value, dueTimePart)}
                   required
@@ -439,6 +470,7 @@ export function MissionModal({
                 <Input
                   id="mission-due-time"
                   type="time"
+                  lang={inputLang}
                   value={dueTimePart}
                   onChange={(e) => setDueFromParts(dueDatePart, e.target.value)}
                   required
@@ -536,13 +568,48 @@ export function MissionModal({
                 type="button"
                 variant="outline"
                 className="border-red-500/50 text-red-300 hover:bg-red-500/20"
-                onClick={handleDelete}
+                onClick={onDeleteClick}
                 disabled={deleting}
               >
                 {deleting ? '…' : t('delete')}
               </Button>
             )}
           </div>
+          {deleteChoiceOpen && (
+            <div className="space-y-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+              <p className="text-sm font-medium text-white">
+                {t('deleteScopeTitle')}
+              </p>
+              <p className="text-xs text-white/60">{t('deleteScopeHint')}</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 border-white/20 text-white hover:bg-white/10"
+                  disabled={deleting}
+                  onClick={() => void handleDelete('single')}
+                >
+                  {t('deleteTodayOnly')}
+                </Button>
+                <Button
+                  type="button"
+                  className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                  disabled={deleting}
+                  onClick={() => void handleDelete('future')}
+                >
+                  {t('deleteAllFuture')}
+                </Button>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-white/50 hover:text-white"
+                onClick={() => setDeleteChoiceOpen(false)}
+              >
+                {t('cancel')}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

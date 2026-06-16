@@ -82,7 +82,9 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome back, {name}",
+    "welcome": "Welcome back",
+    "themeButton": "Customize theme",
+    "settingsButton": "Settings",
     "tabs": {
       "overview": "Overview",
       "goals": "Goals & Habits",
@@ -98,6 +100,7 @@
         "totalXP": "Total XP",
         "next": "Next milestone"
       },
+      "achievements": "Achievements",
       "level": {
         "allLevels": "All Levels",
         "description": "View all levels, rewards, and requirements",
@@ -115,7 +118,7 @@
           "title": "Level up!",
           "level": "Level {level}",
           "rewardGold": "+{gold} gold",
-          "avatarsUnlocked": "New avatars unlocked!"
+          "themesUnlocked": "New theme unlocked!"
         },
         "rewards": {
           "1": "First steps",
@@ -180,6 +183,11 @@
         "dayToday": "Today",
         "dayYesterday": "Yesterday",
         "dayTomorrow": "Tomorrow",
+        "openDayPicker": "Pick a date",
+        "pickDate": "Pick a day",
+        "goToToday": "Go to today",
+        "prevMonth": "Previous month",
+        "nextMonth": "Next month",
         "missionCount": "{count} missions",
         "missionCount_one": "{count} mission",
         "missionCount_other": "{count} missions",
@@ -191,8 +199,21 @@
         "loading": "Loading missions…",
         "dailyQuestTitle": "Daily quest",
         "dailyQuestProgress": "{completed}/{target} missions completed",
-        "weeklyCompleted": "Week done",
-        "weeklyScheduled": "Week planned",
+        "dailyQuestReward": "Complete {target} missions today → +{xp} XP and +{gold} gold",
+        "dailyQuestClaimed": "Daily quest complete! Bonus claimed.",
+        "weeklyCompleted": "Completed this week",
+        "weeklyScheduled": "Scheduled this week",
+        "claimReward": "Claim",
+        "claimDailyQuest": "Claim bonus",
+        "claimCelebrationTitle": "Reward claimed!",
+        "claimLevelTitle": "Level {level} reward!",
+        "claimGold": "+{gold} gold",
+        "claimXp": "+{xp} XP",
+        "claimCta": "Nice!",
+        "adBonus": "(ad bonus)",
+        "streakBonusBadge": "+{percent}%",
+        "xpWithBonus": "+{xp} XP (+{percent}%)",
+        "dailyLoginRewardHint": "Daily reward",
         "weeklyXp": "Week XP",
         "due": "Due",
         "status": {
@@ -214,11 +235,20 @@
         "categoryLabel": "Category",
         "categoryPlaceholder": "Fitness, Learning, Productivity…",
         "typeLabel": "Type",
-        "xpLabel": "XP reward",
+        "typeHintHabit": "A routine to repeat — great for building behavior (e.g. drink water, read).",
+        "typeHintGoal": "A one-off task to check off — great for a specific deliverable (e.g. finish a report).",
+        "difficultyLabel": "Difficulty",
+        "xpLabel": "Difficulty",
         "difficultyEasy": "Easy",
         "difficultyMedium": "Medium",
         "difficultyHard": "Hard",
-        "xpAutoHint": "Auto reward: {xp} XP",
+        "xpAutoHint": "{xp} XP",
+        "templates": {
+          "hydrate": "Hydrate (8 glasses)",
+          "workout": "30 min workout",
+          "deepWork": "Deep work sprint (45 min)",
+          "read": "Read 20 minutes"
+        },
         "dueLabel": "Due",
         "dueFriendlyToday": "Today at {time}",
         "dueFriendlyYesterday": "Yesterday at {time}",
@@ -237,6 +267,10 @@
         "cancel": "Cancel",
         "delete": "Delete",
         "deleteConfirm": "Delete this mission?",
+        "deleteScopeTitle": "Delete this habit?",
+        "deleteScopeHint": "Remove today only, or stop the habit for all upcoming days.",
+        "deleteTodayOnly": "Today only",
+        "deleteAllFuture": "All future days",
         "complete": "Complete",
         "uncomplete": "Mark as to-do",
         "categories": {
@@ -335,26 +369,40 @@
         "exportData": "Export data"
       }
     },
-    "avatarPicker": {
-      "title": "Choose your avatar",
-      "description": "Select a predefined avatar. Unlock more by leveling up.",
+    "themePicker": {
+      "title": "Choose your theme",
+      "description": "Personalize the app look. Unlock new themes through levels, streaks, and achievements.",
       "preview": "Preview",
-      "unlockAtLevel": "Unlock at level {level}",
       "actions": {
         "save": "Save",
-        "cancel": "Cancel",
-        "remove": "Remove avatar"
+        "cancel": "Cancel"
       }
     },
     "streakModal": {
       "share": "Share",
+      "loading": "Loading...",
       "streakTitle": "{count}-day streak!",
       "goalTitle": "Streak goal",
       "goalProgress": "{current} / {target} days",
       "goalUnlock": "Reach a 7-day streak to unlock exclusive rewards.",
+      "themeObjectivesTitle": "Theme objectives",
+      "themeObjectiveLevelTitle": "Level {level}",
+      "themeObjectiveStreakTitle": "{days}-day streak",
+      "themeObjectiveDescription": "Unlock the {themeId} theme",
+      "themeObjectiveLocked": "Lv. {current} / {level}",
+      "themeObjectiveStreakLocked": "{current} / {days} days",
       "monthLongestStreak": "Longest streak",
       "monthActiveDays": "Active days",
       "daysUnit": "days",
+      "bonusActive": "+{percent}% XP bonus",
+      "bonusTitle": "XP bonus",
+      "bonusPercent": "+{percent}%",
+      "bonusNone": "0%",
+      "bonusRule": "Each full week of streak adds 10% bonus XP on missions. No cap.",
+      "bonusNext": "+{percent}% in {days} days",
+      "freezeTitle": "Streak shields",
+      "freezeDescription": "Protect your streak if you miss a day. Buy more in the shop.",
+      "freezeUse": "Use a shield",
       "weekdays": {
         "mon": "M",
         "tue": "T",
@@ -453,6 +501,328 @@
         "title": "Wishlist splurge",
         "description": "That bigger treat you've delayed for too long"
       }
+    },
+    "streakFreeze": {
+      "title": "Streak shield",
+      "description": "Save your streak if you miss a day. One use.",
+      "purchaseSuccess": "Streak shield added to your inventory!",
+      "purchaseFailed": "Could not purchase shield."
+    },
+    "sponsored": {
+      "badge": "Sponsored",
+      "title": "BetterHelp — 7-day free trial",
+      "description": "Talk to a licensed therapist online. Take care of your mental health on your ascent.",
+      "cta": "Learn more"
+    }
+  },
+  "achievements": {
+    "title": "Achievements",
+    "back": "Dashboard",
+    "loading": "Loading…",
+    "globalProgress": "Overall progress",
+    "tiersUnlocked": "{current} / {total} tiers",
+    "locked": "Locked",
+    "tierProgress": "Tier {current}/{max}",
+    "progress": "Progress: {value}",
+    "nextAt": "Next tier: {threshold}",
+    "tiersTitle": "Tiers",
+    "tierLabel": "Tier {tier}",
+    "threshold": "Goal: {count}",
+    "claim": "Claim",
+    "claimTitle": "Tier {tier} unlocked!",
+    "unlockTitle": "New tier!",
+    "unlockSubtitle": "Reward available — claim it from the achievement details.",
+    "unlockCta": "Continue",
+    "frames": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "diamond": "Diamond",
+      "ruby": "Ruby",
+      "emerald": "Emerald",
+      "sapphire": "Sapphire",
+      "amethyst": "Amethyst",
+      "topaz": "Topaz"
+    },
+    "streakMaster": {
+      "name": "Streak Master",
+      "description": "Maintain consecutive active days"
+    },
+    "missionHunter": {
+      "name": "Mission Hunter",
+      "description": "Complete missions to progress"
+    },
+    "risingStar": {
+      "name": "Rising Star",
+      "description": "Level up your character"
+    },
+    "goldCollector": {
+      "name": "Gold Collector",
+      "description": "Earn gold throughout your journey"
+    },
+    "dailyQuestHero": {
+      "name": "Daily Quest Hero",
+      "description": "Complete daily quests"
+    },
+    "rewardSpender": {
+      "name": "Smart Spender",
+      "description": "Redeem rewards in the shop"
+    },
+    "consistency": {
+      "name": "Consistency",
+      "description": "Stay active across many days"
+    },
+    "xpLegend": {
+      "name": "XP Legend",
+      "description": "Accumulate experience points"
+    },
+    "dailyLogin": {
+      "name": "Early Bird",
+      "description": "Log in regularly"
+    },
+    "weeklyGrinder": {
+      "name": "Weekly Grinder",
+      "description": "Complete missions each week"
+    },
+    "goalGetter": {
+      "name": "Goal Getter",
+      "description": "Complete one-off goals"
+    },
+    "habitMachine": {
+      "name": "Habit Machine",
+      "description": "Check off habits day after day"
+    },
+    "perfectDay": {
+      "name": "Perfect Day",
+      "description": "Complete at least 3 missions in a day"
+    },
+    "rewardCreator": {
+      "name": "Dream Builder",
+      "description": "Create personal rewards in the shop"
+    },
+    "freezeSaver": {
+      "name": "Freeze Guardian",
+      "description": "Use shields to protect your streak"
+    }
+  },
+  "ads": {
+    "label": "Advertisement",
+    "playing": "Playing…",
+    "rewarded": {
+      "title": "Double your reward?",
+      "description": "Watch a short ad to double this mission's XP.",
+      "watch": "Watch ad",
+      "skip": "No thanks"
+    }
+  },
+  "onboarding": {
+    "progress": "{percent}%",
+    "next": "Next",
+    "skip": "Skip tour",
+    "welcome": {
+      "title": "Welcome to Ascent!",
+      "body": "Let's take a quick tour and set up your first missions. It only takes a few minutes.",
+      "cta": "Let's go"
+    },
+    "playerBar": {
+      "title": "Your command center",
+      "body": "Everything about your progress lives up here — profile, level, streak, and gold."
+    },
+    "theme": {
+      "title": "Your themes",
+      "body": "Tap here to change the app's look. New themes unlock as you progress."
+    },
+    "dailyLogin": {
+      "title": "Daily reward",
+      "body": "Every day, a small reward waits just for opening the app. Tap the gift to collect it."
+    },
+    "level": {
+      "title": "Your level",
+      "body": "Tap here to open your level ladder. A red badge appears when rewards are ready to claim."
+    },
+    "levelModal": {
+      "title": "Level ladder",
+      "body": "When you level up, rewards glow here — tap Claim to collect your gold. Nothing is given automatically!"
+    },
+    "streak": {
+      "title": "Your streak",
+      "body": "Tap the flame to open your streak calendar and track your consistency."
+    },
+    "streakModal": {
+      "title": "Streak & bonuses",
+      "body": "Each full week of streak boosts your XP by +10%. Shields (cyan) save your streak if you miss a day — buy more in the shop."
+    },
+    "achievementsNav": {
+      "title": "Achievements",
+      "body": "The trophy collects your achievements: 15 challenges with 4 tiers each. Unlock them, then claim rewards when the red badge appears."
+    },
+    "achievementsPage": {
+      "title": "Achievement grid",
+      "body": "Each achievement has bronze, silver, gold, and gem tiers (diamond, ruby, emerald…). Unlocked ones rise to the top — tap one to see progress and claim your loot."
+    },
+    "habitRepeat": {
+      "title": "Daily habits",
+      "body": "Habits come back every day automatically — no need to recreate them. To stop, delete today only or all future occurrences."
+    },
+    "gold": {
+      "title": "Your gold",
+      "body": "Gold builds up as you progress. Spend it in the shop on rewards you set for yourself — a treat, an outing, something you actually want."
+    },
+    "dayPicker": {
+      "title": "Travel through time",
+      "body": "Use the arrows to move day by day, or tap the date to open the calendar and jump straight to any day."
+    },
+    "missions": {
+      "title": "Your daily missions",
+      "body": "Every mission you complete moves you forward. Consistency beats perfection — a few actions each day add up fast."
+    },
+    "addMission": {
+      "title": "Create your first mission",
+      "body": "Now it's your turn — tap here and add a habit or goal that's meaningful to you."
+    },
+    "dailyQuest": {
+      "title": "Daily quest",
+      "body": "Complete 3 missions in a day to unlock bonus XP and gold. Small daily effort, big impact on your progress."
+    },
+    "shopNav": {
+      "title": "Visit the shop",
+      "body": "Tap your gold balance to open the shop — that's where you create rewards to spend your gold on."
+    },
+    "createReward": {
+      "title": "Create a personal reward",
+      "body": "Name something you'd enjoy — a treat, activity, or purchase — and set how much gold it costs."
+    },
+    "backDashboard": {
+      "title": "Back to your missions",
+      "body": "Head back to the dashboard. One last thing awaits: completing your tutorial mission."
+    },
+    "completeTutorial": {
+      "title": "Complete your tutorial mission",
+      "body": "Tap the checkmark to finish. Completing a mission earns XP — this one might even level you up!"
+    },
+    "claimLevel": {
+      "title": "You leveled up!",
+      "body": "The red badge means a reward is ready. Tap your level to see what's waiting."
+    },
+    "claimLevelModal": {
+      "title": "Open your reward",
+      "body": "Your new level is unlocked. Collect your gold — you'll spend it in the shop."
+    },
+    "chooseTheme": {
+      "title": "Try your new theme",
+      "body": "You unlocked Light mode! Open the theme picker and try it out."
+    },
+    "done": {
+      "title": "You're all set!",
+      "body": "You know how missions, XP, gold, and rewards work. Now go crush your goals!",
+      "cta": "Start climbing"
+    }
+  },
+  "themes": {
+    "unlockTitle": "New theme unlocked!",
+    "tryNow": "Try now",
+    "dark": {
+      "name": "Dark",
+      "description": "Void black with hot pink and violet nebula glows."
+    },
+    "lava": {
+      "name": "Lava",
+      "description": "Molten magma and obsidian — volcanic heat that pulses and glows."
+    },
+    "crimson": {
+      "name": "Crimson",
+      "description": "Blood red on pure black — aggressive and loud."
+    },
+    "ocean": {
+      "name": "Ocean",
+      "description": "Abyssal bioluminescent blues from the deep sea."
+    },
+    "midnight": {
+      "name": "Midnight",
+      "description": "Starless void purple with electric blue accents."
+    },
+    "rainbow": {
+      "name": "Rainbow",
+      "description": "Full-spectrum chaos — red, yellow, blue, constantly shifting."
+    },
+    "aurora": {
+      "name": "Aurora",
+      "description": "Electric magenta, violet, and cyan — no green in sight."
+    },
+    "neon": {
+      "name": "Neon",
+      "description": "Cyberpunk hot pink and acid lime on pitch black."
+    },
+    "prism": {
+      "name": "Prism",
+      "description": "Holographic iridescence — unlock any gem-tier achievement."
+    },
+    "ascended": {
+      "name": "Ascended",
+      "description": "Golden cosmic light — unlock every other theme first."
+    },
+    "unlockSource": {
+      "default": "Always available",
+      "level": "Level {level}",
+      "streak": "{days}-day streak",
+      "achievement": "Achievement tier {tier}",
+      "achievementAny": "Any gem-tier success",
+      "allThemes": "All themes ({count})"
+    },
+    "unlockDetail": {
+      "default": "This theme is available from the start.",
+      "level": "Reach level {level} to unlock this theme.",
+      "streak": "Maintain a {days}-day streak to unlock this theme.",
+      "achievement": "Reach the {achievement} achievement (tier {tier}) to unlock this theme.",
+      "achievementAny": "Reach tier {tier} on any achievement (diamond, ruby, emerald…) to unlock this theme.",
+      "allThemes": "Unlock all {count} other themes to earn this ultimate theme."
+    }
+  },
+  "juice": {
+    "levelUp": "Level up!",
+    "levelNumber": "Level {level}",
+    "dailyQuestReady": "Daily quest complete — claim your reward!",
+    "shopRedeemTitle": "Reward redeemed!",
+    "shopRedeemCost": "-{cost} gold",
+    "shopRedeemCta": "Nice!",
+    "soundMute": "Mute sounds",
+    "soundUnmute": "Unmute sounds"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your Ascent experience",
+    "back": "Dashboard",
+    "preferences": {
+      "title": "Preferences",
+      "sound": "Sound effects",
+      "soundDescription": "Play sounds for missions, rewards, and celebrations",
+      "animations": "Animations",
+      "animationsDescription": "Confetti, floating XP, and motion effects"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Change colors and unlock new themes as you progress",
+      "customizeTheme": "Customize theme"
+    },
+    "language": {
+      "title": "Language",
+      "en": "English",
+      "fr": "Français"
+    },
+    "redeem": {
+      "title": "Redeem code",
+      "description": "Enter a promo or access code",
+      "placeholder": "Enter code",
+      "submit": "Redeem",
+      "success": "Code redeemed! All themes and achievements are unlocked.",
+      "invalid": "Invalid code. Please try again.",
+      "unavailable": "Code redemption is not available right now.",
+      "error": "Something went wrong. Please try again."
+    },
+    "account": {
+      "title": "Account",
+      "email": "Email",
+      "signOut": "Sign out"
     }
   }
 }

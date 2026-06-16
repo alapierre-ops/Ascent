@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const userId = session.user.id
 
     const parsed = redeemSchema.safeParse(await request.json())
     if (!parsed.success) {
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
           cost: input.cost,
           icon: input.icon ?? null,
           type: input.type ?? RewardType.REAL_LIFE,
-          creatorId: session.user.id,
+          creatorId: userId,
         },
         select: { id: true },
       })
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
     const result = await prisma.$transaction(async (tx) => {
       const [user, reward] = await Promise.all([
         tx.user.findUnique({
-          where: { id: session.user.id },
+          where: { id: userId },
           select: { currency: true },
         }),
         tx.reward.findUnique({
@@ -70,13 +71,13 @@ export async function POST(request: NextRequest) {
 
       const [updatedUser] = await Promise.all([
         tx.user.update({
-          where: { id: session.user.id },
+          where: { id: userId },
           data: { currency: { decrement: reward.cost } },
           select: { currency: true },
         }),
         tx.userReward.create({
           data: {
-            userId: session.user.id,
+            userId,
             rewardId: reward.id,
           },
         }),
