@@ -25,29 +25,43 @@ async function loginAs(
   await page.request.patch(`${baseURL}/api/user/me`, {
     data: { onboardingCompleted: true },
   })
-  // The starter mission pack is opt-in (empty state button), not seeded
-  // automatically — apply it so the task list has content to assert on.
-  const starterRes = await page.request.post(
-    `${baseURL}/api/missions/templates/starter`
-  )
-  if (!starterRes.ok()) {
-    throw new Error(
-      `Failed to seed starter missions: ${starterRes.status()} ${await starterRes.text()}`
-    )
-  }
   await page.reload()
 }
 
-// The dashboard's mission fetch silently falls back to an empty list on any
-// transient error (no retry), so assertions on seeded content reload once
-// before failing to absorb a flaky first fetch right after login.
-async function expectVisibleWithRetry(page: Page, text: string) {
-  try {
-    await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 })
-  } catch {
-    await page.reload()
-    await expect(page.getByText(text)).toBeVisible({ timeout: 10_000 })
+// Create a mission directly via the API. The starter mission pack
+// (`/api/missions/templates/starter`) is unreliable here: the dashboard's
+// own "daily login" mission is created as a side effect of mounting, and it
+// races with this seeding call — whichever wins, the starter pack sees an
+// existing mission for today and silently skips seeding.
+async function createMission(
+  page: Page,
+  baseURL: string | undefined,
+  data: {
+    title: string
+    category: string
+    type: 'HABIT' | 'GOAL'
+    xp: number
+    dueAt: string
   }
+) {
+  const res = await page.request.post(`${baseURL}/api/missions`, { data })
+  if (!res.ok()) {
+    throw new Error(
+      `Failed to create mission: ${res.status()} ${await res.text()}`
+    )
+  }
+  return res.json()
+}
+
+// Builds an ISO timestamp within "today" (UTC), the window the dashboard
+// and the missions API both use to decide what counts as due today.
+function todayAt(minutesFromMidnightUTC: number): string {
+  const now = new Date()
+  const date = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+  )
+  date.setUTCMinutes(date.getUTCMinutes() + minutesFromMidnightUTC)
+  return date.toISOString()
 }
 
 test.describe('Feature: Dashboard', () => {
@@ -126,8 +140,18 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Starter mission template seeded for new users
-      await expectVisibleWithRetry(page, 'Hydrate (8 glasses)')
+      await createMission(page, baseURL, {
+        title: 'Hydrate (8 glasses)',
+        category: 'Health',
+        type: 'HABIT',
+        xp: 20,
+        dueAt: todayAt(8 * 60),
+      })
+      await page.reload()
+
+      await expect(page.getByText('Hydrate (8 glasses)')).toBeVisible({
+        timeout: 10_000,
+      })
     })
 
     test('shows an XP reward badge on each task', async ({
@@ -140,14 +164,15 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Starter template: "Hydrate (8 glasses)" rewards 20 XP
-      await expectVisibleWithRetry(page, 'Hydrate (8 glasses)')
-      const missions = await (
-        await page.request.get(`${baseURL}/api/missions`)
-      ).json()
-      const hydrate = missions.find(
-        (m: { title: string }) => m.title === 'Hydrate (8 glasses)'
-      )
+      const hydrate = await createMission(page, baseURL, {
+        title: 'Hydrate (8 glasses)',
+        category: 'Health',
+        type: 'HABIT',
+        xp: 20,
+        dueAt: todayAt(8 * 60),
+      })
+      await page.reload()
+
       await expect(
         page.locator(`[data-mission-id="${hydrate.id}"]`)
       ).toContainText('+20 XP')
@@ -165,23 +190,18 @@ test.describe('Feature: Dashboard', () => {
 
       // Create a goal due earlier today so the dashboard's "today" view
       // renders it, but the time has already passed (marks it overdue)
-      const now = new Date()
-      const earlierToday = new Date(
-        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
-      )
-      earlierToday.setUTCMinutes(earlierToday.getUTCMinutes() + 1)
-      await page.request.post(`${baseURL}/api/missions`, {
-        data: {
-          title: 'Ship landing page redesign',
-          category: 'Productivity',
-          type: 'GOAL',
-          xp: 150,
-          dueAt: earlierToday.toISOString(),
-        },
+      await createMission(page, baseURL, {
+        title: 'Ship landing page redesign',
+        category: 'Productivity',
+        type: 'GOAL',
+        xp: 150,
+        dueAt: todayAt(1),
       })
       await page.reload()
 
-      await expectVisibleWithRetry(page, 'Ship landing page redesign')
+      await expect(page.getByText('Ship landing page redesign')).toBeVisible({
+        timeout: 10_000,
+      })
       await expect(page.getByText(/overdue/i).first()).toBeVisible()
     })
   })
