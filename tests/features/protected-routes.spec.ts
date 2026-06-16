@@ -79,7 +79,9 @@ test.describe('Feature: Protected Routes', () => {
       )
       await page.goto(`${(baseURL as string).replace(/\/$/, '')}/en/goals`)
       await expect(page).toHaveURL(/\/goals/, { timeout: 10_000 })
-      await expect(page.getByRole('heading', { name: /goals/i })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { level: 1, name: /goals/i })
+      ).toBeVisible()
     })
 
     test('authenticated user can navigate to /en/shop', async ({

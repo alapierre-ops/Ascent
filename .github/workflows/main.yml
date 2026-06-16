@@ -29,6 +29,7 @@ jobs:
       NEXTAUTH_URL: http://localhost:3000
       AUTH_URL: http://localhost:3000
       MOCK_EMAILS: 'true'
+      EXPOSE_TEST_TOKENS: 'true'
     steps:
       - uses: actions/checkout@v4
       

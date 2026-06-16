@@ -17,13 +17,12 @@ test.describe('Feature: Login / Sign-up UI', () => {
       await expect(page.locator('#login-password')).toBeVisible()
     })
 
-    test('Sign Up tab has name, email and password inputs', async ({
+    test('Sign Up tab has email and password inputs', async ({
       page,
       baseURL,
     }) => {
       await page.goto(`${baseURL}/en`)
       await page.getByRole('tab', { name: /sign up/i }).click()
-      await expect(page.locator('#signup-name')).toBeVisible()
       await expect(page.locator('#signup-email')).toBeVisible()
       await expect(page.locator('#signup-password')).toBeVisible()
     })
@@ -93,7 +92,6 @@ test.describe('Feature: Login / Sign-up UI', () => {
 
       await page.goto(`${baseURL}/en`)
       await page.getByRole('tab', { name: /sign up/i }).click()
-      await page.locator('#signup-name').fill('New User')
       await page.locator('#signup-email').fill(email)
       await page.locator('#signup-password').fill('password123')
       await page.getByRole('button', { name: /create account/i }).click()
@@ -122,7 +120,6 @@ test.describe('Feature: Login / Sign-up UI', () => {
 
       await page.goto(`${baseURL}/en`)
       await page.getByRole('tab', { name: /sign up/i }).click()
-      await page.locator('#signup-name').fill('Duplicate')
       await page.locator('#signup-email').fill(email)
       await page.locator('#signup-password').fill('password123')
       await page.getByRole('button', { name: /create account/i }).click()

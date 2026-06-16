@@ -10,14 +10,13 @@ test.describe('Feature: User Registration', () => {
     const email = `register+${Date.now()}@example.com`
 
     const res = await request.post(`${baseURL}${ENDPOINT}`, {
-      data: { email, password: 'password123', name: 'Test User', locale: 'en' },
+      data: { email, password: 'password123', locale: 'en' },
     })
 
     expect(res.status()).toBe(200)
     const body = await res.json()
     expect(body.success).toBe(true)
     expect(body.user.email).toBe(email)
-    expect(body.user.name).toBe('Test User')
     expect(body.user.id).toBeDefined()
     expect(body.user.password).toBeUndefined()
   })
@@ -76,25 +75,6 @@ test.describe('Feature: User Registration', () => {
     const body = await res.json()
     expect(body.error).toBe('VALIDATION_ERROR')
     expect(body.message).toMatch(/6/)
-  })
-
-  test('rejects a name shorter than 2 characters', async ({
-    request,
-    baseURL,
-  }) => {
-    const res = await request.post(`${baseURL}${ENDPOINT}`, {
-      data: {
-        email: `shortname+${Date.now()}@example.com`,
-        password: 'password123',
-        name: 'A',
-        locale: 'en',
-      },
-    })
-
-    expect(res.status()).toBe(400)
-    const body = await res.json()
-    expect(body.error).toBe('VALIDATION_ERROR')
-    expect(body.message).toMatch(/2/)
   })
 
   test('accepts registration with French locale', async ({

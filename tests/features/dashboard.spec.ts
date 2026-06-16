@@ -13,13 +13,19 @@ async function loginAs(
   { email, password }: { email: string; password: string }
 ) {
   await request.post(`${baseURL}/api/auth/register`, {
-    data: { email, password, name: 'Dashboard User', locale: 'en' },
+    data: { email, password, locale: 'en' },
   })
   await page.goto(`${baseURL}/en`)
   await page.locator('#login-email').fill(email)
   await page.locator('#login-password').fill(password)
   await page.getByRole('button', { name: /^sign in$/i }).click()
   await page.waitForURL('**/dashboard', { timeout: 30_000 })
+  // New accounts start the onboarding tour, whose overlay blocks clicks
+  // on the dashboard — skip it so tests can interact with the page.
+  await page.request.patch(`${baseURL}/api/user/me`, {
+    data: { onboardingCompleted: true },
+  })
+  await page.reload()
 }
 
 test.describe('Feature: Dashboard', () => {
@@ -72,12 +78,10 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Mock data: first streak is 3 days
-      const streakButton = page
-        .locator('button')
-        .filter({ hasText: '3' })
-        .first()
+      // A freshly registered user has no completed missions yet
+      const streakButton = page.locator('[data-onboarding="streak"]')
       await expect(streakButton).toBeVisible({ timeout: 10_000 })
+      await expect(streakButton).toContainText('0')
     })
 
     test("shows the user's gold balance in the player bar", async ({
@@ -100,8 +104,8 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Mock data includes "Hydrate: 8 glasses"
-      await expect(page.getByText('Hydrate: 8 glasses')).toBeVisible({
+      // Starter mission template seeded for new users
+      await expect(page.getByText('Hydrate (8 glasses)')).toBeVisible({
         timeout: 10_000,
       })
     })
@@ -130,7 +134,18 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Mock data: "Ship landing page redesign" is overdue
+      // Create a goal due in the past so the dashboard renders it as overdue
+      await page.request.post(`${baseURL}/api/missions`, {
+        data: {
+          title: 'Ship landing page redesign',
+          category: 'Productivity',
+          type: 'GOAL',
+          xp: 150,
+          dueAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        },
+      })
+      await page.reload()
+
       await expect(page.getByText('Ship landing page redesign')).toBeVisible({
         timeout: 10_000,
       })
@@ -151,7 +166,7 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      await page.locator('button').filter({ hasText: '12' }).first().click()
+      await page.locator('[data-onboarding="level"]').click()
       await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 })
     })
 

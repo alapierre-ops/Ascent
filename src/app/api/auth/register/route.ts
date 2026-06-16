@@ -74,9 +74,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       user,
-      // Exposed outside production so integration tests can verify the email
-      // flow without depending on a real email inbox.
-      ...(process.env.NODE_ENV !== 'production' && { verificationToken }),
+      // Exposed only when explicitly enabled so e2e tests can verify the
+      // email flow without depending on a real email inbox.
+      ...(process.env.EXPOSE_TEST_TOKENS === 'true' && { verificationToken }),
     })
   } catch (error) {
     console.error('Registration error:', error)
