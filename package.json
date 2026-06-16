@@ -15,7 +15,8 @@
     "db:seed:cleanup": "ts-node prisma/seed/cleanup.ts",
     "prepare": "husky install",
     "test": "playwright test",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:features": "playwright test tests/features"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
