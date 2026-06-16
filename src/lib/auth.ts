@@ -4,8 +4,10 @@ import Google from 'next-auth/providers/google'
 
 import { verifyPassword } from '@/lib/password'
 import { prisma } from '@/lib/prisma'
+import { ensureDefaultTheme } from '@/lib/themes/service'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   session: {
     strategy: 'jwt',
   },
@@ -52,8 +54,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
-          image: user.image,
         }
       },
     }),
@@ -72,13 +72,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           dbUser = await prisma.user.create({
             data: {
               email: profile.email,
-              name: profile.name || '',
-              image: profile.picture,
               level: 1,
               xp: 0,
               currency: 0,
             },
           })
+          await ensureDefaultTheme(prisma, dbUser.id)
         }
         token.id = dbUser.id
       }
