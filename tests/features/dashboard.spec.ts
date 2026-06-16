@@ -25,6 +25,9 @@ async function loginAs(
   await page.request.patch(`${baseURL}/api/user/me`, {
     data: { onboardingCompleted: true },
   })
+  // The starter mission pack is opt-in (empty state button), not seeded
+  // automatically — apply it so the task list has content to assert on.
+  await page.request.post(`${baseURL}/api/missions/templates/starter`)
   await page.reload()
 }
 
