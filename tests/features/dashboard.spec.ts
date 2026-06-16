@@ -123,8 +123,19 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Mock data: first task rewards +20 XP
-      await expect(page.getByText('+20 XP')).toBeVisible({ timeout: 10_000 })
+      // Starter template: "Hydrate (8 glasses)" rewards 20 XP
+      await expect(page.getByText('Hydrate (8 glasses)')).toBeVisible({
+        timeout: 10_000,
+      })
+      const missions = await (
+        await page.request.get(`${baseURL}/api/missions`)
+      ).json()
+      const hydrate = missions.find(
+        (m: { title: string }) => m.title === 'Hydrate (8 glasses)'
+      )
+      await expect(
+        page.locator(`[data-mission-id="${hydrate.id}"]`)
+      ).toContainText('+20 XP')
     })
 
     test('marks overdue tasks with a visual indicator', async ({
@@ -137,14 +148,20 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Create a goal due in the past so the dashboard renders it as overdue
+      // Create a goal due earlier today so the dashboard's "today" view
+      // renders it, but the time has already passed (marks it overdue)
+      const now = new Date()
+      const earlierToday = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+      )
+      earlierToday.setUTCMinutes(earlierToday.getUTCMinutes() + 1)
       await page.request.post(`${baseURL}/api/missions`, {
         data: {
           title: 'Ship landing page redesign',
           category: 'Productivity',
           type: 'GOAL',
           xp: 150,
-          dueAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          dueAt: earlierToday.toISOString(),
         },
       })
       await page.reload()
