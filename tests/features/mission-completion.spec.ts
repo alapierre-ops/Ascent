@@ -397,11 +397,13 @@ test.describe('Feature: Mission Completion', () => {
 
       const card = page.locator(`[data-mission-id="${mission.id}"]`)
       await expect(card).toBeVisible({ timeout: 10_000 })
-      await card.getByRole('button', { name: /^complete$/i }).click()
+      // CSS selector — aria-label is reliable and unaffected by the
+      // RewardedAdPrompt dialog that opens after completion (Radix sets
+      // aria-hidden on background content, which would break getByRole)
+      await card.locator('button[aria-label="Complete"]').click()
 
-      // After completion the card should offer the uncomplete action
       await expect(
-        card.getByRole('button', { name: /mark as to-do/i })
+        card.locator('button[aria-label="Mark as to-do"]')
       ).toBeVisible({ timeout: 10_000 })
     })
 
@@ -425,15 +427,15 @@ test.describe('Feature: Mission Completion', () => {
       await page.reload()
 
       const card = page.locator(`[data-mission-id="${mission.id}"]`)
-      await card.getByRole('button', { name: /^complete$/i }).click()
+      await card.locator('button[aria-label="Complete"]').click()
       await expect(
-        card.getByRole('button', { name: /mark as to-do/i })
+        card.locator('button[aria-label="Mark as to-do"]')
       ).toBeVisible({ timeout: 10_000 })
 
-      await card.getByRole('button', { name: /mark as to-do/i }).click()
-      await expect(
-        card.getByRole('button', { name: /^complete$/i })
-      ).toBeVisible({ timeout: 10_000 })
+      await card.locator('button[aria-label="Mark as to-do"]').click()
+      await expect(card.locator('button[aria-label="Complete"]')).toBeVisible({
+        timeout: 10_000,
+      })
     })
   })
 })
