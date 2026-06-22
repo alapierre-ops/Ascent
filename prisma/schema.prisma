@@ -24,6 +24,10 @@ model User {
   xp            Int       @default(0)      // Expérience actuelle
   currency      Int       @default(0)      // "Gold" à dépenser
   
+  // --- PREMIUM ---
+  isPremium         Boolean   @default(false)
+  stripeCustomerId  String?   @unique
+
   // --- SOCIAL & V2 (Futur) ---
   bio           String?
   image         String?   // Avatar URL

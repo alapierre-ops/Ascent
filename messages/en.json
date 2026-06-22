@@ -262,6 +262,23 @@
   },
   "shop": {
     "title": "Shop",
-    "underConstruction": "Under construction"
+    "underConstruction": "Under construction",
+    "premium": {
+      "badge": "One-time offer",
+      "title": "Go ad-free",
+      "price": "€5.00",
+      "priceLabel": "one-time payment",
+      "description": "Enjoy Ascent without any ads, forever.",
+      "perks": [
+        "No ads on any page",
+        "Early access to new features",
+        "Exclusive badge on your profile"
+      ],
+      "cta": "Buy now",
+      "loading": "Redirecting...",
+      "alreadyPremium": "You're already premium!",
+      "alreadyPremiumDesc": "Thank you for your support. Enjoy Ascent ad-free.",
+      "error": "Something went wrong. Please try again."
+    }
   }
 }

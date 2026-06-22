@@ -62,7 +62,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user, account, profile }) {
       if (user) {
-        token.id = user.id
+        token.id = user.id!
+        const dbUser = await prisma.user.findUnique({ where: { id: user.id! } })
+        token.isPremium = dbUser?.isPremium ?? false
       }
       if (account?.provider === 'google' && profile?.email) {
         let dbUser = await prisma.user.findUnique({
@@ -88,6 +90,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        session.user.isPremium = token.isPremium as boolean
       }
       return session
     },
