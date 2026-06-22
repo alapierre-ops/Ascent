@@ -421,7 +421,7 @@ test.describe('Feature: Mission Completion', () => {
         title: 'Journal entry',
         category: 'Wellness',
         type: 'HABIT',
-        xp: 10,
+        xp: 0,
         dueAt: todayAt(8 * 60),
       })
       await page.reload()
