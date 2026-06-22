@@ -7,7 +7,13 @@ import { routing } from './i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
-const PROTECTED_ROUTES = ['/dashboard', '/goals']
+const PROTECTED_ROUTES = [
+  '/dashboard',
+  '/goals',
+  '/settings',
+  '/achievements',
+  '/shop',
+]
 const AUTH_ONLY_ROUTES = ['reset-password']
 const PUBLIC_AUTH_PATHS = ['en', 'fr']
 
@@ -24,12 +30,15 @@ export default auth(async function middleware(req) {
     PUBLIC_AUTH_PATHS.includes(pathname.split('/')[1]) &&
     pathname.split('/').length === 2
 
-  if (isProtected && !session) {
+  // Vérifier session?.user?.id (req.auth peut être {} sans user en Edge)
+  const isAuthenticated = Boolean(session?.user?.id)
+
+  if (isProtected && !isAuthenticated) {
     const loginUrl = new URL(`/${locale}`, req.url)
     return NextResponse.redirect(loginUrl)
   }
 
-  if ((isLoginPage || isAuthOnlyRoute) && session) {
+  if ((isLoginPage || isAuthOnlyRoute) && isAuthenticated) {
     const dashboardUrl = new URL(`/${locale}/dashboard`, req.url)
     return NextResponse.redirect(dashboardUrl)
   }
