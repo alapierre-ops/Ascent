@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react'
 import { useLocale, useTranslations } from 'next-intl'
 import Link from 'next/link'
 
-import { ArrowLeft, LogOut, Settings, Sparkles, Wand2 } from 'lucide-react'
+import { ArrowLeft, LogOut, RotateCcw, Settings, Sparkles } from 'lucide-react'
 
 import { useJuice } from '@/components/juice/useJuice'
 import { DashboardShell } from '@/components/layout/DashboardShell'
@@ -40,6 +40,17 @@ export default function SettingsPage() {
     'idle' | 'loading' | 'success' | 'invalid' | 'unavailable' | 'error'
   >('idle')
   const [redeemMessage, setRedeemMessage] = useState<string | null>(null)
+  const [resetPhrase, setResetPhrase] = useState('')
+  const [resetStatus, setResetStatus] = useState<
+    'idle' | 'loading' | 'success' | 'invalid' | 'error'
+  >('idle')
+  const [resetMessage, setResetMessage] = useState<string | null>(null)
+
+  const resetConfirmPhrase = t('account.reset.confirmPhrase')
+  const resetPhraseMatches =
+    resetPhrase.trim().toUpperCase() === resetConfirmPhrase.toUpperCase() ||
+    resetPhrase.trim().toUpperCase().normalize('NFD').replace(/\p{M}/gu, '') ===
+      resetConfirmPhrase.toUpperCase().normalize('NFD').replace(/\p{M}/gu, '')
 
   useEffect(() => {
     fetch('/api/user/me')
@@ -59,12 +70,6 @@ export default function SettingsPage() {
   const handleSignOut = () => {
     juice.playUiClick()
     void signOut({ callbackUrl: `/${locale}` })
-  }
-
-  const handleOpenThemePicker = () => {
-    juice.playUiClick()
-    sessionStorage.setItem('ascent:openThemePicker', '1')
-    router.push('/dashboard')
   }
 
   const handleRedeem = async () => {
@@ -107,6 +112,43 @@ export default function SettingsPage() {
     } catch {
       setRedeemStatus('error')
       setRedeemMessage(t('redeem.error'))
+    }
+  }
+
+  const handleResetAccount = async () => {
+    if (!resetPhraseMatches) return
+
+    juice.playUiClick()
+    setResetStatus('loading')
+    setResetMessage(null)
+
+    try {
+      const res = await fetch('/api/account/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: resetPhrase.trim() }),
+      })
+
+      if (res.status === 400) {
+        setResetStatus('invalid')
+        setResetMessage(t('account.reset.invalid'))
+        return
+      }
+
+      if (!res.ok) {
+        setResetStatus('error')
+        setResetMessage(t('account.reset.error'))
+        return
+      }
+
+      setResetStatus('success')
+      setResetMessage(t('account.reset.success'))
+      window.setTimeout(() => {
+        window.location.href = `/${locale}/dashboard`
+      }, 800)
+    } catch {
+      setResetStatus('error')
+      setResetMessage(t('account.reset.error'))
     }
   }
 
@@ -158,28 +200,6 @@ export default function SettingsPage() {
                 juice.setAnimationsEnabled(checked)
               }}
             />
-          </CardContent>
-        </Card>
-
-        <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg text-white">
-              {t('appearance.title')}
-            </CardTitle>
-            <CardDescription className="text-white/60">
-              {t('appearance.description')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleOpenThemePicker}
-              className="border-white/20 bg-white/5 text-white hover:bg-white/10"
-            >
-              <Wand2 className="mr-2 h-4 w-4 text-violet-300" />
-              {t('appearance.customizeTheme')}
-            </Button>
           </CardContent>
         </Card>
 
@@ -277,6 +297,61 @@ export default function SettingsPage() {
                 <p className="text-sm text-white">{email}</p>
               </div>
             ) : null}
+            <div className="space-y-3 rounded-lg border border-red-400/20 bg-red-500/5 p-4">
+              <div>
+                <p className="text-sm font-medium text-red-100">
+                  {t('account.reset.title')}
+                </p>
+                <p className="mt-1 text-xs text-white/60">
+                  {t('account.reset.description')}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  value={resetPhrase}
+                  onChange={(e) => {
+                    setResetPhrase(e.target.value)
+                    if (resetStatus !== 'idle' && resetStatus !== 'loading') {
+                      setResetStatus('idle')
+                      setResetMessage(null)
+                    }
+                  }}
+                  placeholder={t('account.reset.placeholder')}
+                  className="border-red-400/20 bg-black/20 text-white placeholder:text-white/40"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void handleResetAccount()
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handleResetAccount()}
+                  disabled={resetStatus === 'loading' || !resetPhraseMatches}
+                  className="shrink-0 border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20"
+                >
+                  {resetStatus === 'loading' ? (
+                    <RotateCcw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      {t('account.reset.submit')}
+                    </>
+                  )}
+                </Button>
+              </div>
+              {resetMessage ? (
+                <p
+                  className={cn(
+                    'text-sm',
+                    resetStatus === 'success'
+                      ? 'text-emerald-400'
+                      : 'text-red-300'
+                  )}
+                >
+                  {resetMessage}
+                </p>
+              ) : null}
+            </div>
             <Button
               type="button"
               variant="outline"
