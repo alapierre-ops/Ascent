@@ -275,7 +275,7 @@ test.describe('Feature: Shop', () => {
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
         data: {
           title: 'Expensive item',
-          cost: 9999,
+          cost: 100,
           icon: '💎',
           type: 'REAL_LIFE',
         },
