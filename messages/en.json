@@ -840,7 +840,17 @@
     "account": {
       "title": "Account",
       "email": "Email",
-      "signOut": "Sign out"
+      "signOut": "Sign out",
+      "reset": {
+        "title": "Reset progress",
+        "description": "Clear missions, gold, XP, achievements, themes, and shop history. Your account stays — the tutorial will start again.",
+        "placeholder": "Type RESET to confirm",
+        "confirmPhrase": "RESET",
+        "submit": "Reset account",
+        "success": "Account reset. Restarting…",
+        "invalid": "Type RESET exactly to confirm.",
+        "error": "Reset failed. Please try again."
+      }
     }
   }
 }

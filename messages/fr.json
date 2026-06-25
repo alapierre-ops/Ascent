@@ -840,7 +840,17 @@
     "account": {
       "title": "Compte",
       "email": "E-mail",
-      "signOut": "Se déconnecter"
+      "signOut": "Se déconnecter",
+      "reset": {
+        "title": "Réinitialiser la progression",
+        "description": "Efface les missions, l'or, l'XP, les succès, les thèmes et l'historique boutique. Ton compte est conservé — le tutoriel recommencera.",
+        "placeholder": "Tape RÉINITIALISER pour confirmer",
+        "confirmPhrase": "RÉINITIALISER",
+        "submit": "Réinitialiser le compte",
+        "success": "Compte réinitialisé. Redémarrage…",
+        "invalid": "Tape RÉINITIALISER exactement pour confirmer.",
+        "error": "Échec de la réinitialisation. Réessaie."
+      }
     }
   }
 }

@@ -12,6 +12,7 @@ const MAX_TIER = 4
 const MAX_LEVEL = 20
 const DEMO_GOLD = 10_000
 const DEMO_XP = 15_000
+const TX_TIMEOUT_MS = 60_000
 
 export type GrantDemoUnlocksResult = {
   themes: number
@@ -105,167 +106,153 @@ export async function grantDemoUnlocks(
   prisma: PrismaClient,
   userId: string
 ): Promise<GrantDemoUnlocksResult> {
-  return prisma.$transaction(async (tx) => {
-    const frozenDates = buildFrozenDates(20)
+  return prisma.$transaction(
+    async (tx) => {
+      const frozenDates = buildFrozenDates(20)
 
-    await tx.user.update({
-      where: { id: userId },
-      data: {
-        level: MAX_LEVEL,
-        xp: DEMO_XP,
-        currency: DEMO_GOLD,
-        frozenStreakDates: frozenDates,
-      },
-    })
-
-    const demoMissionCount = await tx.mission.count({
-      where: { userId, category: 'Demo' },
-    })
-    if (demoMissionCount === 0) {
-      await tx.mission.createMany({
-        data: buildDemoMissions(userId),
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          level: MAX_LEVEL,
+          xp: DEMO_XP,
+          currency: DEMO_GOLD,
+          frozenStreakDates: frozenDates,
+        },
       })
-    }
 
-    const customRewardCount = await tx.reward.count({
-      where: { creatorId: userId, title: { startsWith: 'Demo reward' } },
-    })
-    if (customRewardCount === 0) {
-      for (let i = 0; i < 20; i += 1) {
-        await tx.reward.create({
-          data: {
+      const demoMissionCount = await tx.mission.count({
+        where: { userId, category: 'Demo' },
+      })
+      if (demoMissionCount === 0) {
+        await tx.mission.createMany({
+          data: buildDemoMissions(userId),
+        })
+      }
+
+      const customRewardCount = await tx.reward.count({
+        where: { creatorId: userId, title: { startsWith: 'Demo reward' } },
+      })
+      if (customRewardCount === 0) {
+        await tx.reward.createMany({
+          data: Array.from({ length: 20 }, (_, i) => ({
             creatorId: userId,
             title: `Demo reward ${i + 1}`,
             cost: 50,
             type: RewardType.REAL_LIFE,
             icon: '🎁',
-          },
+          })),
         })
       }
-    }
 
-    const shopRedeemCount = await tx.userReward.count({ where: { userId } })
-    if (shopRedeemCount < 35) {
-      const shopReward = await tx.reward.create({
-        data: {
-          title: 'Demo shop item',
-          cost: 100,
-          type: RewardType.COSMETIC,
-          icon: '🛍️',
-        },
-      })
-
-      for (let i = shopRedeemCount; i < 35; i += 1) {
-        await tx.userReward.create({
+      const shopRedeemCount = await tx.userReward.count({ where: { userId } })
+      if (shopRedeemCount < 35) {
+        const shopReward = await tx.reward.create({
           data: {
+            title: 'Demo shop item',
+            cost: 100,
+            type: RewardType.COSMETIC,
+            icon: '🛍️',
+          },
+        })
+
+        await tx.userReward.createMany({
+          data: Array.from({ length: 35 - shopRedeemCount }, () => ({
             userId,
             rewardId: shopReward.id,
-          },
+          })),
         })
       }
-    }
 
-    const dailyQuestClaimed = await tx.pendingReward.count({
-      where: { userId, type: 'DAILY_QUEST', claimedAt: { not: null } },
-    })
-    if (dailyQuestClaimed < 75) {
-      for (let i = dailyQuestClaimed; i < 75; i += 1) {
-        await tx.pendingReward.create({
-          data: {
+      const dailyQuestClaimed = await tx.pendingReward.count({
+        where: { userId, type: 'DAILY_QUEST', claimedAt: { not: null } },
+      })
+      if (dailyQuestClaimed < 75) {
+        await tx.pendingReward.createMany({
+          data: Array.from({ length: 75 - dailyQuestClaimed }, (_, offset) => ({
             userId,
-            type: 'DAILY_QUEST',
+            type: 'DAILY_QUEST' as const,
             gold: 10,
             xp: 25,
-            claimedAt: atDaysAgo(i % 30),
-          },
+            claimedAt: atDaysAgo((dailyQuestClaimed + offset) % 30),
+          })),
         })
       }
-    }
 
-    const dailyLoginClaimed = await tx.pendingReward.count({
-      where: { userId, type: 'DAILY_LOGIN', claimedAt: { not: null } },
-    })
-    if (dailyLoginClaimed < 30) {
-      for (let i = dailyLoginClaimed; i < 30; i += 1) {
-        await tx.pendingReward.create({
-          data: {
+      const dailyLoginClaimed = await tx.pendingReward.count({
+        where: { userId, type: 'DAILY_LOGIN', claimedAt: { not: null } },
+      })
+      if (dailyLoginClaimed < 30) {
+        await tx.pendingReward.createMany({
+          data: Array.from({ length: 30 - dailyLoginClaimed }, (_, offset) => ({
             userId,
-            type: 'DAILY_LOGIN',
+            type: 'DAILY_LOGIN' as const,
             gold: 5,
             xp: 10,
-            claimedAt: atDaysAgo(i),
-          },
+            claimedAt: atDaysAgo(dailyLoginClaimed + offset),
+          })),
         })
       }
-    }
 
-    for (const theme of THEMES) {
-      await tx.userThemeUnlock.upsert({
-        where: {
-          userId_themeId: { userId, themeId: theme.id },
-        },
-        create: {
+      await tx.userThemeUnlock.createMany({
+        data: THEMES.map((theme) => ({
           userId,
           themeId: theme.id,
           source: unlockSourceKey(theme.unlock),
-        },
-        update: {},
-      })
-    }
-
-    for (const def of ACHIEVEMENTS) {
-      const lastTier = def.tiers[def.tiers.length - 1]
-      const progress = lastTier.threshold
-
-      await tx.userAchievement.upsert({
-        where: {
-          userId_achievementId: { userId, achievementId: def.id },
-        },
-        create: {
-          userId,
-          achievementId: def.id,
-          progress,
-          currentTier: MAX_TIER,
-        },
-        update: { progress, currentTier: MAX_TIER },
+        })),
+        skipDuplicates: true,
       })
 
-      for (const tier of def.tiers) {
-        const existing = await tx.pendingReward.findFirst({
+      for (const def of ACHIEVEMENTS) {
+        const lastTier = def.tiers[def.tiers.length - 1]
+        await tx.userAchievement.upsert({
           where: {
+            userId_achievementId: { userId, achievementId: def.id },
+          },
+          create: {
             userId,
-            type: 'ACHIEVEMENT',
+            achievementId: def.id,
+            progress: lastTier.threshold,
+            currentTier: MAX_TIER,
+          },
+          update: { progress: lastTier.threshold, currentTier: MAX_TIER },
+        })
+      }
+
+      const existingAchievementRewards = await tx.pendingReward.findMany({
+        where: { userId, type: 'ACHIEVEMENT' },
+        select: { refAchievementId: true, refTier: true },
+      })
+      const existingKeys = new Set(
+        existingAchievementRewards.map(
+          (r) => `${r.refAchievementId}:${r.refTier}`
+        )
+      )
+
+      const missingAchievementRewards = ACHIEVEMENTS.flatMap((def) =>
+        def.tiers
+          .filter((tier) => !existingKeys.has(`${def.id}:${tier.tier}`))
+          .map((tier) => ({
+            userId,
+            type: 'ACHIEVEMENT' as const,
             refAchievementId: def.id,
             refTier: tier.tier,
-          },
-        })
+            gold: tier.gold,
+            xp: tier.xp,
+            claimedAt: new Date(),
+          }))
+      )
 
-        if (existing) {
-          await tx.pendingReward.update({
-            where: { id: existing.id },
-            data: { claimedAt: existing.claimedAt ?? new Date() },
-          })
-        } else {
-          await tx.pendingReward.create({
-            data: {
-              userId,
-              type: 'ACHIEVEMENT',
-              refAchievementId: def.id,
-              refTier: tier.tier,
-              gold: tier.gold,
-              xp: tier.xp,
-              claimedAt: new Date(),
-            },
-          })
-        }
+      if (missingAchievementRewards.length > 0) {
+        await tx.pendingReward.createMany({ data: missingAchievementRewards })
       }
-    }
 
-    return {
-      themes: THEMES.length,
-      achievements: ACHIEVEMENTS.length,
-      level: MAX_LEVEL,
-      gold: DEMO_GOLD,
-    }
-  })
+      return {
+        themes: THEMES.length,
+        achievements: ACHIEVEMENTS.length,
+        level: MAX_LEVEL,
+        gold: DEMO_GOLD,
+      }
+    },
+    { timeout: TX_TIMEOUT_MS }
+  )
 }
