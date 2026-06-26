@@ -49,8 +49,10 @@ export default function AchievementsPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void load()
+    const timer = setTimeout(() => {
+      void load()
+    }, 0)
+    return () => clearTimeout(timer)
   }, [])
 
   const openDetail = (a: AchievementView) => {
