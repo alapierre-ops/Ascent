@@ -132,7 +132,7 @@ test.describe('Feature: Password Reset', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       const link = page.locator('a', { hasText: /forgot/i })
       await expect(link).toBeVisible()
     })
@@ -141,7 +141,7 @@ test.describe('Feature: Password Reset', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       const link = page.locator('a', { hasText: /forgot/i })
       const href = await link.getAttribute('href')
       expect(href).toContain('reset-password')

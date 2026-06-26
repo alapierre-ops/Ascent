@@ -7,28 +7,28 @@ import {
 
 test.describe('Feature: Protected Routes', () => {
   test.describe('Unauthenticated redirects', () => {
-    test('/en/dashboard redirects unauthenticated users to /en', async ({
+    test('/en/dashboard redirects unauthenticated users to /en/login', async ({
       page,
       baseURL,
     }) => {
       await page.goto(`${baseURL}/en/dashboard`)
-      await expect(page).toHaveURL(/\/(en|fr)$/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/(en|fr)\/login$/, { timeout: 10_000 })
     })
 
-    test('/fr/dashboard redirects unauthenticated users to /fr', async ({
+    test('/fr/dashboard redirects unauthenticated users to /fr/login', async ({
       page,
       baseURL,
     }) => {
       await page.goto(`${baseURL}/fr/dashboard`)
-      await expect(page).toHaveURL(/\/fr$/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/fr\/login$/, { timeout: 10_000 })
     })
 
-    test('/en/goals redirects unauthenticated users', async ({
+    test('/en/goals redirects unauthenticated users to /en/login', async ({
       page,
       baseURL,
     }) => {
       await page.goto(`${baseURL}/en/goals`)
-      await expect(page).toHaveURL(/\/(en|fr)$/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/(en|fr)\/login$/, { timeout: 10_000 })
     })
   })
 
@@ -45,7 +45,7 @@ test.describe('Feature: Protected Routes', () => {
       await request.post(`${baseURL}/api/auth/register`, {
         data: { email, password, name: 'Protected Route User', locale: 'en' },
       })
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.locator('#login-email').fill(email)
       await page.locator('#login-password').fill(password)
       await page.getByRole('button', { name: /^sign in$/i }).click()
@@ -112,7 +112,7 @@ test.describe('Feature: Protected Routes', () => {
         baseURL,
         `prot-auth+${Date.now()}@example.com`
       )
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 })
     })
   })

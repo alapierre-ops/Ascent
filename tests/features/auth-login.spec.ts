@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 test.describe('Feature: Login / Sign-up UI', () => {
   test.describe('Auth page layout', () => {
     test('shows Sign In and Sign Up tabs', async ({ page, baseURL }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page.getByRole('tab', { name: /sign in/i })).toBeVisible()
       await expect(page.getByRole('tab', { name: /sign up/i })).toBeVisible()
     })
@@ -12,7 +12,7 @@ test.describe('Feature: Login / Sign-up UI', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page.locator('#login-email')).toBeVisible()
       await expect(page.locator('#login-password')).toBeVisible()
     })
@@ -21,21 +21,21 @@ test.describe('Feature: Login / Sign-up UI', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.getByRole('tab', { name: /sign up/i }).click()
       await expect(page.locator('#signup-email')).toBeVisible()
       await expect(page.locator('#signup-password')).toBeVisible()
     })
 
     test('shows a Google sign-in button', async ({ page, baseURL }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(
         page.getByRole('button', { name: /google/i }).first()
       ).toBeVisible()
     })
 
     test('shows a forgot password link', async ({ page, baseURL }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page.getByRole('link', { name: /forgot/i })).toBeVisible()
     })
   })
@@ -47,7 +47,7 @@ test.describe('Feature: Login / Sign-up UI', () => {
     }) => {
       test.setTimeout(30_000)
 
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.locator('#login-email').fill('nobody@example.com')
       await page.locator('#login-password').fill('wrongpassword')
       await page.getByRole('button', { name: /^sign in$/i }).click()
@@ -71,7 +71,7 @@ test.describe('Feature: Login / Sign-up UI', () => {
         data: { email, password, name: 'Login User', locale: 'en' },
       })
 
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.locator('#login-email').fill(email)
       await page.locator('#login-password').fill(password)
       await page.getByRole('button', { name: /^sign in$/i }).click()
@@ -90,7 +90,7 @@ test.describe('Feature: Login / Sign-up UI', () => {
 
       const email = `signup+${Date.now()}@example.com`
 
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.getByRole('tab', { name: /sign up/i }).click()
       await page.locator('#signup-email').fill(email)
       await page.locator('#signup-password').fill('password123')
@@ -118,7 +118,7 @@ test.describe('Feature: Login / Sign-up UI', () => {
         },
       })
 
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.getByRole('tab', { name: /sign up/i }).click()
       await page.locator('#signup-email').fill(email)
       await page.locator('#signup-password').fill('password123')
@@ -146,14 +146,14 @@ test.describe('Feature: Login / Sign-up UI', () => {
       })
 
       // Login
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await page.locator('#login-email').fill(email)
       await page.locator('#login-password').fill(password)
       await page.getByRole('button', { name: /^sign in$/i }).click()
       await page.waitForURL('**/dashboard', { timeout: 30_000 })
 
       // Return to auth page — should be redirected to dashboard
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 })
     })
   })

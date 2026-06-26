@@ -15,7 +15,7 @@ async function loginAs(
   await request.post(`${baseURL}/api/auth/register`, {
     data: { email, password, locale: 'en' },
   })
-  await page.goto(`${baseURL}/en`)
+  await page.goto(`${baseURL}/en/login`)
   await page.locator('#login-email').fill(email)
   await page.locator('#login-password').fill(password)
   await page.getByRole('button', { name: /^sign in$/i }).click()

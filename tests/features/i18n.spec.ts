@@ -23,7 +23,7 @@ test.describe('Feature: Internationalisation (i18n)', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page.getByRole('tab', { name: 'Sign In' })).toBeVisible()
     })
 
@@ -31,7 +31,7 @@ test.describe('Feature: Internationalisation (i18n)', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page.getByRole('tab', { name: 'Sign Up' })).toBeVisible()
     })
 
@@ -39,7 +39,7 @@ test.describe('Feature: Internationalisation (i18n)', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en`)
+      await page.goto(`${baseURL}/en/login`)
       await expect(page.getByRole('link', { name: /forgot/i })).toBeVisible()
     })
 
@@ -60,7 +60,7 @@ test.describe('Feature: Internationalisation (i18n)', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/fr`)
+      await page.goto(`${baseURL}/fr/login`)
       // next-intl translation for auth.signIn in French
       await expect(page.getByRole('tab', { name: /connecter/i })).toBeVisible()
     })
@@ -69,7 +69,7 @@ test.describe('Feature: Internationalisation (i18n)', () => {
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/fr`)
+      await page.goto(`${baseURL}/fr/login`)
       await expect(page.getByRole('tab', { name: /inscrire/i })).toBeVisible()
     })
 
