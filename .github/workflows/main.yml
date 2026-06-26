@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ascent_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/ascent_test
+      NEXTAUTH_SECRET: test-secret-key
+      RESEND_API_KEY: test-dummy-key
+      NODE_ENV: production
+      NEXTAUTH_URL: http://localhost:3000
+      AUTH_URL: http://localhost:3000
+      MOCK_EMAILS: 'true'
+      EXPOSE_TEST_TOKENS: 'true'
+      STRIPE_SECRET_KEY: 'sk_test_dummy_ci_key_not_real'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      
+      - name: Install dependencies
+        env:
+          NODE_ENV: development
+        run: npm ci --include=dev
+
+      - name: Lint
+        run: npm run lint
+      
+      - name: Generate Prisma client and push schema
+        run: |
+          npx prisma generate
+          npx prisma db push --accept-data-loss
+      
+      - name: Build Next.js app
+        run: npm run build
+      
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      
+      - name: Run end-to-end tests
+        run: npm run test
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
