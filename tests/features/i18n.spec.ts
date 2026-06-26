@@ -96,7 +96,7 @@ test.describe('Feature: Internationalisation (i18n)', () => {
       baseURL,
     }) => {
       await page.goto(`${baseURL}/fr/dashboard`)
-      await expect(page).toHaveURL(/\/fr$/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/fr\/login$/, { timeout: 10_000 })
     })
   })
 })

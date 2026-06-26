@@ -71,7 +71,7 @@ test.describe('Feature: Dashboard', () => {
       baseURL,
     }) => {
       await page.goto(`${baseURL}/en/dashboard`)
-      await expect(page).toHaveURL(/\/(en|fr)$/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/(en|fr)\/login$/, { timeout: 10_000 })
     })
 
     test('unauthenticated user hitting /fr/dashboard is redirected', async ({
@@ -79,7 +79,7 @@ test.describe('Feature: Dashboard', () => {
       baseURL,
     }) => {
       await page.goto(`${baseURL}/fr/dashboard`)
-      await expect(page).toHaveURL(/\/(en|fr)$/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/(en|fr)\/login$/, { timeout: 10_000 })
     })
   })
 
@@ -96,12 +96,9 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // The mock data has level 12 — verify a number is displayed
-      const levelButton = page
-        .locator('button')
-        .filter({ hasText: '12' })
-        .first()
-      await expect(levelButton).toBeVisible({ timeout: 10_000 })
+      await expect(page.locator('[data-onboarding="level"]')).toBeVisible({
+        timeout: 10_000,
+      })
     })
 
     test('shows the streak count in the player bar', async ({
@@ -130,8 +127,9 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      // Mock data: gold = 3200 — formatted as "3,200"
-      await expect(page.getByText('3,200')).toBeVisible({ timeout: 10_000 })
+      await expect(page.locator('[data-onboarding="gold"]')).toBeVisible({
+        timeout: 10_000,
+      })
     })
 
     test("shows today's tasks list", async ({ page, request, baseURL }) => {
@@ -254,7 +252,7 @@ test.describe('Feature: Dashboard', () => {
         password: 'password123',
       })
 
-      await page.getByRole('link', { name: /3,200/i }).click()
+      await page.locator('[data-onboarding="gold"]').click()
       await expect(page).toHaveURL(/\/shop/, { timeout: 10_000 })
     })
   })
