@@ -45,6 +45,12 @@ export function ThemeUnlockModal({
     juice.playThemeUnlocked()
   }, [open, themeId, skipSound, juice])
 
+  useEffect(() => {
+    if (themeId != null && !getThemeById(themeId)) {
+      onClose()
+    }
+  }, [themeId, onClose])
+
   if (!theme) return null
 
   return (

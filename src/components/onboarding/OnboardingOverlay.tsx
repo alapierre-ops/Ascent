@@ -35,6 +35,14 @@ function routeFromPathname(pathname: string): string | null {
   return null
 }
 
+function isNavigationStep(advanceOn: OnboardingAdvanceEvent) {
+  return (
+    advanceOn === 'navigate-shop' ||
+    advanceOn === 'navigate-dashboard' ||
+    advanceOn === 'navigate-achievements'
+  )
+}
+
 function isInteractiveStep(advanceOn: OnboardingAdvanceEvent) {
   return (
     advanceOn !== 'next' &&
@@ -42,6 +50,10 @@ function isInteractiveStep(advanceOn: OnboardingAdvanceEvent) {
     advanceOn !== 'navigate-dashboard' &&
     advanceOn !== 'navigate-achievements'
   )
+}
+
+function needsTargetClick(advanceOn: OnboardingAdvanceEvent) {
+  return isInteractiveStep(advanceOn) || isNavigationStep(advanceOn)
 }
 
 function BackdropPanels({ rect }: { rect: Rect | null }) {
@@ -90,8 +102,16 @@ export function OnboardingOverlay() {
   const t = useTranslations('onboarding')
   const pathname = usePathname()
   const currentRoute = routeFromPathname(pathname)
-  const { active, paused, currentStep, stepIndex, totalSteps, advance, skip } =
-    useOnboarding()
+  const {
+    active,
+    paused,
+    currentStep,
+    stepIndex,
+    totalSteps,
+    advance,
+    skip,
+    skipStep,
+  } = useOnboarding()
 
   const [targetRect, setTargetRect] = useState<Rect | null>(null)
 
@@ -103,7 +123,8 @@ export function OnboardingOverlay() {
   const isLastStep = stepIndex === totalSteps - 1
   const insideAppModal =
     currentStep?.id === 'claim-level-modal' ||
-    currentStep?.id === 'streak-modal'
+    currentStep?.id === 'streak-modal' ||
+    currentStep?.id === 'choose-theme-modal'
 
   const updateRect = useCallback(() => {
     if (
@@ -124,7 +145,8 @@ export function OnboardingOverlay() {
     const scrollBlock =
       currentStep.target === 'back-dashboard'
         ? 'start'
-        : currentStep.target === 'tutorial-mission'
+        : currentStep.target === 'tutorial-mission' ||
+            currentStep.target === 'overdue-mission'
           ? 'center'
           : 'nearest'
     el.scrollIntoView({ block: scrollBlock, behavior: 'smooth' })
@@ -168,7 +190,8 @@ export function OnboardingOverlay() {
     if (
       currentStep.id === 'back-dashboard' ||
       currentStep.id === 'create-reward' ||
-      currentStep.id === 'complete-tutorial'
+      currentStep.id === 'complete-tutorial' ||
+      currentStep.id === 'overdue-mission'
     ) {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       const timer = setTimeout(updateRect, 400)
@@ -183,8 +206,10 @@ export function OnboardingOverlay() {
     )
     if (!el) return
     const interactive = isInteractiveStep(currentStep.advanceOn)
+    const navigable = isNavigationStep(currentStep.advanceOn)
+    const modalTarget = currentStep.id === 'choose-theme-modal'
     el.classList.add('relative', 'z-[80]')
-    if (interactive) {
+    if (interactive || navigable || modalTarget) {
       el.classList.add('pointer-events-auto')
     }
     return () => {
@@ -197,6 +222,8 @@ export function OnboardingOverlay() {
 
   const showNextButton = currentStep.advanceOn === 'next'
   const interactive = isInteractiveStep(currentStep.advanceOn)
+  const showTapHint = needsTargetClick(currentStep.advanceOn)
+  const showSkipStep = !showNextButton && !isLastStep
   const title = t(currentStep.titleKey)
   const body = t(currentStep.bodyKey)
   const cta = currentStep.ctaKey ? t(currentStep.ctaKey) : t('next')
@@ -239,41 +266,44 @@ export function OnboardingOverlay() {
   }
 
   const popoverAtTop =
-    interactive &&
-    (currentStep.id === 'create-reward' ||
-      currentStep.id === 'complete-tutorial' ||
-      (targetRect != null && targetRect.top > window.innerHeight * 0.4))
+    interactive ||
+    currentStep.id === 'choose-theme-modal' ||
+    currentStep.id === 'create-reward' ||
+    currentStep.id === 'complete-tutorial' ||
+    currentStep.id === 'overdue-mission' ||
+    (targetRect != null && targetRect.top > window.innerHeight * 0.4)
 
-  const popoverStyle: React.CSSProperties = interactive
-    ? popoverAtTop
+  const popoverStyle: React.CSSProperties =
+    popoverAtTop && (interactive || currentStep.id === 'choose-theme-modal')
       ? {
           top: 16,
           left: '50%',
           transform: 'translateX(-50%)',
           bottom: 'auto',
         }
-      : {
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          top: 'auto',
-        }
-    : targetRect
-      ? {
-          top: Math.min(
-            targetRect.top + targetRect.height + 12,
-            window.innerHeight - 220
-          ),
-          left: Math.max(
-            16,
-            Math.min(targetRect.left, window.innerWidth - 336)
-          ),
-        }
-      : {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }
+      : interactive
+        ? {
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            top: 'auto',
+          }
+        : targetRect
+          ? {
+              top: Math.min(
+                targetRect.top + targetRect.height + 12,
+                window.innerHeight - 220
+              ),
+              left: Math.max(
+                16,
+                Math.min(targetRect.left, window.innerWidth - 336)
+              ),
+            }
+          : {
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }
 
   return (
     <>
@@ -313,25 +343,43 @@ export function OnboardingOverlay() {
         <p className="mt-2 text-sm leading-relaxed text-white/70">{body}</p>
         <div
           className={cn(
-            'mt-4 flex items-center gap-3',
-            showNextButton && !isLastStep ? 'justify-between' : 'justify-start'
+            'mt-4 flex flex-col gap-2',
+            showNextButton || showSkipStep
+              ? 'sm:flex-row sm:items-center sm:justify-between'
+              : ''
           )}
         >
-          {!isLastStep && (
-            <button
-              type="button"
-              onClick={skip}
-              className="text-xs text-white/35 transition hover:text-white/55"
-            >
-              {t('skip')}
-            </button>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {!isLastStep && (
+              <button
+                type="button"
+                onClick={skip}
+                className="text-xs text-white/35 transition hover:text-white/55"
+              >
+                {t('skip')}
+              </button>
+            )}
+            {showSkipStep && (
+              <button
+                type="button"
+                onClick={skipStep}
+                className="text-xs text-white/50 transition hover:text-white/75"
+              >
+                {t('skipStep')}
+              </button>
+            )}
+          </div>
+          {showTapHint && (
+            <p className="text-xs font-medium text-indigo-300/90">
+              {t('tapHint')}
+            </p>
           )}
           {showNextButton && (
             <Button
               type="button"
               size="sm"
               onClick={advance}
-              className="ml-auto bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-95"
+              className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-95 sm:ml-auto sm:w-auto"
             >
               {cta}
             </Button>

@@ -2,15 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import {
-  ensureRecurringHabits,
-  ensureRolledOverOneOffs,
-} from '@/lib/missions/recurrence'
+  getClientTzOffset,
+  getLocalDateKey,
+  localDayBounds,
+} from '@/lib/missions/dates'
+import { ensureRecurringHabits } from '@/lib/missions/recurrence'
 import {
   DAILY_LOGIN_MISSION_CATEGORY,
   DAILY_LOGIN_TITLES,
 } from '@/lib/missions/special'
 import { ensureDailyLoginReward } from '@/lib/pending-rewards-service'
 import { prisma } from '@/lib/prisma'
+
+function parseTzOffset(body: unknown, searchParams: URLSearchParams): number {
+  const fromQuery = searchParams.get('tzOffset')
+  if (fromQuery != null && fromQuery !== '') {
+    const n = Number(fromQuery)
+    if (!Number.isNaN(n)) return n
+  }
+  if (
+    body &&
+    typeof body === 'object' &&
+    'tzOffset' in body &&
+    typeof (body as { tzOffset: unknown }).tzOffset === 'number'
+  ) {
+    return (body as { tzOffset: number }).tzOffset
+  }
+  return getClientTzOffset()
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,13 +43,13 @@ export async function POST(request: NextRequest) {
       typeof body.locale === 'string' && body.locale.startsWith('fr')
         ? 'fr'
         : 'en'
+    const tzOffset = parseTzOffset(body, new URL(request.url).searchParams)
 
     const now = new Date()
-    const todayStart = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    const { start: todayStart, end: todayEnd } = localDayBounds(
+      getLocalDateKey(now, tzOffset),
+      tzOffset
     )
-    const todayEnd = new Date(todayStart)
-    todayEnd.setUTCDate(todayEnd.getUTCDate() + 1)
 
     let dailyLoginMissionId: string | null = null
     const existingMission = await prisma.mission.findFirst({
@@ -45,8 +64,7 @@ export async function POST(request: NextRequest) {
     if (existingMission) {
       dailyLoginMissionId = existingMission.id
     } else {
-      const dueAt = new Date(now)
-      dueAt.setHours(23, 59, 0, 0)
+      const dueAt = new Date(todayEnd.getTime() - 60 * 1000)
       const mission = await prisma.mission.create({
         data: {
           userId: session.user.id,
@@ -63,8 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const pending = await ensureDailyLoginReward(prisma, session.user.id)
-    await ensureRolledOverOneOffs(prisma, session.user.id)
-    await ensureRecurringHabits(prisma, session.user.id)
+    await ensureRecurringHabits(prisma, session.user.id, tzOffset)
 
     return NextResponse.json({
       dailyLoginMissionId,

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { getMissionDoubleOffer } from '@/lib/ads/mission-double'
 import { auth } from '@/lib/auth'
 import { applyXpAndLevelOnly } from '@/lib/levels'
 import { createLevelUpRewards } from '@/lib/pending-rewards-service'
 import { prisma } from '@/lib/prisma'
-
-const DAILY_AD_LIMIT = 5
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,37 +26,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Mission not found' }, { status: 404 })
     }
 
-    const existing = await prisma.adRewardLog.findFirst({
-      where: {
-        userId: session.user.id,
-        type: 'MISSION_DOUBLE',
-        refId: missionId,
-      },
-    })
-    if (existing) {
-      return NextResponse.json({ error: 'ALREADY_DOUBLED' }, { status: 400 })
-    }
-
-    const todayStart = new Date()
-    todayStart.setHours(0, 0, 0, 0)
-    const todayCount = await prisma.adRewardLog.count({
-      where: {
-        userId: session.user.id,
-        type: 'MISSION_DOUBLE',
-        createdAt: { gte: todayStart },
-      },
-    })
-    if (todayCount >= DAILY_AD_LIMIT) {
-      return NextResponse.json({ error: 'DAILY_LIMIT' }, { status: 429 })
-    }
-
-    const bonusXp = mission.xpApplied ?? mission.xp
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { xp: true, level: true, currency: true },
+      select: { xp: true, level: true, currency: true, isPremium: true },
     })
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const bonusXp = mission.xpApplied ?? mission.xp
+    const offer = await getMissionDoubleOffer(
+      prisma,
+      session.user.id,
+      missionId,
+      bonusXp,
+      user.isPremium
+    )
+    if (!offer) {
+      return NextResponse.json({ error: 'NOT_ELIGIBLE' }, { status: 400 })
     }
 
     const applied = applyXpAndLevelOnly(user.xp, user.level, bonusXp)
@@ -87,7 +73,7 @@ export async function POST(request: NextRequest) {
         xp: applied.xp,
         currency: user.currency,
       },
-      remainingToday: DAILY_AD_LIMIT - todayCount - 1,
+      remainingToday: offer.remainingToday - 1,
     })
   } catch (error) {
     console.error('Ad double mission error:', error)

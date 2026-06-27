@@ -160,7 +160,11 @@ export function JuiceProvider({ children }: JuiceProviderProps) {
           break
         case 'theme_unlock':
           burstThemed('sparkle')
-          themeUnlockHandlerRef.current?.(event.themeId)
+          if (themeUnlockHandlerRef.current) {
+            themeUnlockHandlerRef.current(event.themeId)
+          } else {
+            advanceQueue()
+          }
           break
         case 'shop_redeem':
           setShopRedeem(event.data)

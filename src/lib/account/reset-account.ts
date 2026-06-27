@@ -17,17 +17,20 @@ export async function resetAccount(
   prisma: PrismaClient,
   userId: string
 ): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    await tx.adRewardLog.deleteMany({ where: { userId } })
-    await tx.pendingReward.deleteMany({ where: { userId } })
-    await tx.userAchievement.deleteMany({ where: { userId } })
-    await tx.userReward.deleteMany({ where: { userId } })
-    await tx.mission.deleteMany({ where: { userId } })
-    await tx.userThemeUnlock.deleteMany({ where: { userId } })
-
-    await tx.reward.deleteMany({ where: { creatorId: userId } })
-
-    await tx.user.update({
+  // Batch transaction: one round-trip, avoids interactive tx default 5s timeout on slow DB.
+  await prisma.$transaction([
+    prisma.adRewardLog.deleteMany({ where: { userId } }),
+    prisma.pendingReward.deleteMany({ where: { userId } }),
+    prisma.userAchievement.deleteMany({ where: { userId } }),
+    prisma.userReward.deleteMany({
+      where: {
+        OR: [{ userId }, { reward: { creatorId: userId } }],
+      },
+    }),
+    prisma.mission.deleteMany({ where: { userId } }),
+    prisma.userThemeUnlock.deleteMany({ where: { userId } }),
+    prisma.reward.deleteMany({ where: { creatorId: userId } }),
+    prisma.user.update({
       where: { id: userId },
       data: {
         level: 1,
@@ -38,8 +41,8 @@ export async function resetAccount(
         frozenStreakDates: [],
         onboardingCompletedAt: null,
       },
-    })
-  })
+    }),
+  ])
 
   await ensureDefaultTheme(prisma, userId)
 }

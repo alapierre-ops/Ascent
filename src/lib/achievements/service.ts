@@ -82,55 +82,52 @@ export async function computeMetrics(
     },
   })
 
-  const [
-    completedMissions,
-    weeklyMissions,
-    dailyQuestClaimed,
-    dailyLoginClaimed,
-    shopRedeems,
-    spentGold,
-    pendingLevelGold,
-    claimedAchievementGold,
-    customRewardsCreated,
-  ] = await Promise.all([
-    prisma.mission.findMany({
-      where: {
-        userId,
-        status: 'COMPLETED',
-        dueAt: { gte: historyStart },
-      },
-      select: { dueAt: true, type: true, category: true },
-    }),
-    prisma.mission.count({
-      where: {
-        userId,
-        status: 'COMPLETED',
-        dueAt: { gte: weekStart },
-      },
-    }),
-    prisma.pendingReward.count({
-      where: { userId, type: 'DAILY_QUEST', claimedAt: { not: null } },
-    }),
-    prisma.pendingReward.count({
-      where: { userId, type: 'DAILY_LOGIN', claimedAt: { not: null } },
-    }),
-    prisma.userReward.count({ where: { userId } }),
-    prisma.userReward.findMany({
-      where: { userId },
-      include: { reward: { select: { cost: true } } },
-    }),
-    prisma.pendingReward.aggregate({
-      where: { userId, type: 'LEVEL_UP', claimedAt: { not: null } },
-      _sum: { gold: true },
-    }),
-    prisma.pendingReward.aggregate({
-      where: { userId, type: 'ACHIEVEMENT', claimedAt: { not: null } },
-      _sum: { gold: true },
-    }),
-    prisma.reward.count({
-      where: { creatorId: userId, type: 'REAL_LIFE' },
-    }),
-  ])
+  const completedMissions = await prisma.mission.findMany({
+    where: {
+      userId,
+      status: 'COMPLETED',
+      dueAt: { gte: historyStart },
+    },
+    select: { dueAt: true, type: true, category: true },
+  })
+
+  const [weeklyMissions, dailyQuestClaimed, dailyLoginClaimed] =
+    await Promise.all([
+      prisma.mission.count({
+        where: {
+          userId,
+          status: 'COMPLETED',
+          dueAt: { gte: weekStart },
+        },
+      }),
+      prisma.pendingReward.count({
+        where: { userId, type: 'DAILY_QUEST', claimedAt: { not: null } },
+      }),
+      prisma.pendingReward.count({
+        where: { userId, type: 'DAILY_LOGIN', claimedAt: { not: null } },
+      }),
+    ])
+
+  const spentGold = await prisma.userReward.findMany({
+    where: { userId },
+    include: { reward: { select: { cost: true } } },
+  })
+  const shopRedeems = spentGold.length
+
+  const [pendingLevelGold, claimedAchievementGold, customRewardsCreated] =
+    await Promise.all([
+      prisma.pendingReward.aggregate({
+        where: { userId, type: 'LEVEL_UP', claimedAt: { not: null } },
+        _sum: { gold: true },
+      }),
+      prisma.pendingReward.aggregate({
+        where: { userId, type: 'ACHIEVEMENT', claimedAt: { not: null } },
+        _sum: { gold: true },
+      }),
+      prisma.reward.count({
+        where: { creatorId: userId, type: 'REAL_LIFE' },
+      }),
+    ])
 
   const frozenDates = parseFrozenDates(user?.frozenStreakDates)
   const activeKeys = new Set<string>()
@@ -208,66 +205,94 @@ export async function evaluateAchievements(
   const metrics = await computeMetrics(prisma, userId)
   const newlyUnlocked: NewAchievementTier[] = []
 
+  const [userAchievements, existingPending] = await Promise.all([
+    prisma.userAchievement.findMany({ where: { userId } }),
+    prisma.pendingReward.findMany({
+      where: { userId, type: 'ACHIEVEMENT' },
+    }),
+  ])
+
+  const achMap = new Map(userAchievements.map((a) => [a.achievementId, a]))
+  const pendingKeys = new Set(
+    existingPending.map((p) => `${p.refAchievementId}:${p.refTier}`)
+  )
+
+  const upserts: Array<{
+    achievementId: string
+    progress: number
+    currentTier: number
+    prevTier: number
+  }> = []
+  const pendingCreates: Array<{
+    userId: string
+    type: 'ACHIEVEMENT'
+    refAchievementId: string
+    refTier: number
+    gold: number
+    xp: number
+  }> = []
+
   for (const def of ACHIEVEMENTS) {
     const progress = metricValue(metrics, def.metric)
     const { currentTier } = tierForProgress(def, progress)
-
-    const previous = await prisma.userAchievement.findUnique({
-      where: {
-        userId_achievementId: { userId, achievementId: def.id },
-      },
-    })
+    const previous = achMap.get(def.id)
     const prevTier = previous?.currentTier ?? 0
 
-    await prisma.userAchievement.upsert({
-      where: {
-        userId_achievementId: { userId, achievementId: def.id },
-      },
-      create: {
-        userId,
-        achievementId: def.id,
-        progress,
-        currentTier,
-      },
-      update: { progress, currentTier },
+    upserts.push({
+      achievementId: def.id,
+      progress,
+      currentTier,
+      prevTier,
     })
 
     for (const tierDef of def.tiers) {
       if (progress < tierDef.threshold) continue
 
-      const existing = await prisma.pendingReward.findFirst({
-        where: {
-          userId,
-          type: 'ACHIEVEMENT',
-          refAchievementId: def.id,
-          refTier: tierDef.tier,
-        },
+      const key = `${def.id}:${tierDef.tier}`
+      if (pendingKeys.has(key)) continue
+
+      pendingKeys.add(key)
+      pendingCreates.push({
+        userId,
+        type: 'ACHIEVEMENT',
+        refAchievementId: def.id,
+        refTier: tierDef.tier,
+        gold: tierDef.gold,
+        xp: tierDef.xp,
       })
 
-      if (!existing) {
-        await prisma.pendingReward.create({
-          data: {
-            userId,
-            type: 'ACHIEVEMENT',
-            refAchievementId: def.id,
-            refTier: tierDef.tier,
-            gold: tierDef.gold,
-            xp: tierDef.xp,
-          },
+      if (tierDef.tier > prevTier) {
+        newlyUnlocked.push({
+          achievementId: def.id,
+          tier: tierDef.tier,
+          gold: tierDef.gold,
+          xp: tierDef.xp,
+          icon: tierDef.icon,
+          frame: tierDef.frame,
         })
-        if (tierDef.tier > prevTier) {
-          newlyUnlocked.push({
-            achievementId: def.id,
-            tier: tierDef.tier,
-            gold: tierDef.gold,
-            xp: tierDef.xp,
-            icon: tierDef.icon,
-            frame: tierDef.frame,
-          })
-        }
       }
     }
   }
+
+  await prisma.$transaction([
+    ...upserts.map((row) =>
+      prisma.userAchievement.upsert({
+        where: {
+          userId_achievementId: { userId, achievementId: row.achievementId },
+        },
+        create: {
+          userId,
+          achievementId: row.achievementId,
+          progress: row.progress,
+          currentTier: row.currentTier,
+        },
+        update: { progress: row.progress, currentTier: row.currentTier },
+      })
+    ),
+    ...(pendingCreates.length > 0
+      ? [prisma.pendingReward.createMany({ data: pendingCreates })]
+      : []),
+  ])
 
   return newlyUnlocked
 }

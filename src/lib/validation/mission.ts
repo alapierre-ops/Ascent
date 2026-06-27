@@ -9,9 +9,10 @@ export const createMissionSchema = z.object({
   category: z.string().min(1).max(100),
   type: missionTypeEnum,
   xp: z.number().int().min(0).max(1000),
-  dueAt: z.string().datetime(),
+  dueAt: z.string().datetime().optional(),
   repeat: missionRepeatEnum.optional(),
   repeatCount: z.number().int().min(1).max(31).optional(),
+  tzOffset: z.number().int().optional(),
 })
 
 export const updateMissionSchema = z.object({

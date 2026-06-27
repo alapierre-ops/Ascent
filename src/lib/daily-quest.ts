@@ -1,5 +1,6 @@
 import {
   DAILY_LOGIN_MISSION_CATEGORY,
+  ONBOARDING_OVERDUE_MISSION_CATEGORY,
   TUTORIAL_MISSION_CATEGORY,
 } from '@/lib/missions/special'
 
@@ -10,6 +11,7 @@ export const DAILY_QUEST_BONUS_GOLD = 10
 const DAILY_QUEST_EXCLUDED_CATEGORIES = [
   DAILY_LOGIN_MISSION_CATEGORY,
   TUTORIAL_MISSION_CATEGORY,
+  ONBOARDING_OVERDUE_MISSION_CATEGORY,
 ] as const
 
 export function countsTowardDailyQuest(category: string): boolean {

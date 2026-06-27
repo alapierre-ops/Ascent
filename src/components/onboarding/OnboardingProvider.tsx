@@ -25,10 +25,12 @@ type OnboardingContextValue = {
   stepIndex: number
   currentStep: (typeof ONBOARDING_STEPS)[number] | null
   tutorialMissionId: string | null
+  overdueMissionId: string | null
   totalSteps: number
   advance: () => void
   signal: (event: OnboardingAdvanceEvent) => void
   skip: () => void
+  skipStep: () => void
   pause: () => void
   resume: () => void
 }
@@ -57,6 +59,7 @@ export function OnboardingProvider({
   const [tutorialMissionId, setTutorialMissionId] = useState<string | null>(
     null
   )
+  const [overdueMissionId, setOverdueMissionId] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   const currentStep = active ? (ONBOARDING_STEPS[stepIndex] ?? null) : null
@@ -106,6 +109,11 @@ export function OnboardingProvider({
     void completeOnboarding()
   }, [completeOnboarding])
 
+  const skipStep = useCallback(() => {
+    if (!active || !currentStep) return
+    goToNextStep()
+  }, [active, currentStep, goToNextStep])
+
   const pause = useCallback(() => setPaused(true), [])
   const resume = useCallback(() => setPaused(false), [])
 
@@ -133,6 +141,9 @@ export function OnboardingProvider({
         if (data.tutorialMissionId) {
           setTutorialMissionId(data.tutorialMissionId)
           dispatchOnboardingTutorialReady()
+        }
+        if (data.overdueMissionId) {
+          setOverdueMissionId(data.overdueMissionId)
         }
       }
 
@@ -177,10 +188,12 @@ export function OnboardingProvider({
       stepIndex,
       currentStep,
       tutorialMissionId,
+      overdueMissionId,
       totalSteps: ONBOARDING_STEPS.length,
       advance,
       signal,
       skip,
+      skipStep,
       pause,
       resume,
     }),
@@ -190,9 +203,11 @@ export function OnboardingProvider({
       stepIndex,
       currentStep,
       tutorialMissionId,
+      overdueMissionId,
       advance,
       signal,
       skip,
+      skipStep,
       pause,
       resume,
     ]

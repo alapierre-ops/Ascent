@@ -81,7 +81,10 @@ export function ThemePicker({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="ascent-dialog-surface flex max-h-[min(85dvh,640px)] max-w-sm flex-col gap-0 overflow-hidden p-0 backdrop-blur-xl sm:max-w-sm">
+      <DialogContent
+        data-onboarding="theme-picker"
+        className="ascent-dialog-surface flex max-h-[min(85dvh,640px)] max-w-sm flex-col gap-0 overflow-hidden p-0 backdrop-blur-xl sm:max-w-sm"
+      >
         <DialogHeader className="shrink-0 border-b border-white/10 px-4 py-3 text-left">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Wand2 className="h-5 w-5 text-violet-300" />

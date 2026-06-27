@@ -10,6 +10,8 @@ import { ArrowLeft, Sparkles, Target } from 'lucide-react'
 import { DashboardShell } from '@/components/layout/DashboardShell'
 import { Card, CardContent } from '@/components/ui/card'
 
+import { getClientTzOffset } from '@/lib/missions/dates'
+
 type Mission = {
   id: string
   title: string
@@ -25,7 +27,8 @@ export default function GoalsPage() {
   useEffect(() => {
     const now = new Date()
     const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    fetch(`/api/missions?date=${date}`)
+    const tzOffset = getClientTzOffset()
+    fetch(`/api/missions?date=${date}&tzOffset=${tzOffset}`)
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => setMissions(data))
       .catch(() => setMissions([]))

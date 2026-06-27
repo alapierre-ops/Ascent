@@ -605,7 +605,7 @@ export default function ShopPage() {
                 </CardContent>
               </Card>
             ))}
-            <SponsoredCard />
+            {!isPremium && <SponsoredCard />}
             {IDEAS_AFTER_SPONSOR.map((reward) => (
               <Card
                 key={reward.id}

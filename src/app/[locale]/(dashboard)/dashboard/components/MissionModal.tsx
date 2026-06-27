@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-import { useLocale, useTranslations } from 'next-intl'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-import { toBcp47Locale } from '@/lib/locale'
+import { getClientTzOffset } from '@/lib/missions/dates'
 import { isRecurringHabit } from '@/lib/missions/recurrence'
 import { cn } from '@/lib/utils'
 
@@ -69,65 +69,8 @@ export type MissionForModal = {
   xp: number
   dueAt: string
   status: string
+  createdAt?: string
   repeatKey?: string | null
-}
-
-function toDateTimeLocal(iso: string): string {
-  const d = new Date(iso)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${m}-${day}T${h}:${min}`
-}
-
-function formatTimeForDisplay(dateTimeLocal: string, locale: string): string {
-  if (!dateTimeLocal) return ''
-  const d = new Date(dateTimeLocal)
-  const isFR = locale.startsWith('fr')
-  if (isFR) {
-    const h = d.getHours()
-    const m = d.getMinutes()
-    return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
-  }
-  return d.toLocaleTimeString(toBcp47Locale(locale), {
-    hour: 'numeric',
-    minute: d.getMinutes() ? '2-digit' : undefined,
-    hour12: true,
-  })
-}
-
-function formatDueFriendly(
-  dateTimeLocal: string,
-  locale: string,
-  t: (key: string, values?: Record<string, string>) => string
-): string {
-  if (!dateTimeLocal) return ''
-  const d = new Date(dateTimeLocal)
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  const dueDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  const time = formatTimeForDisplay(dateTimeLocal, locale)
-  if (dueDate.getTime() === today.getTime()) {
-    return t('dueFriendlyToday', { time })
-  }
-  if (dueDate.getTime() === yesterday.getTime()) {
-    return t('dueFriendlyYesterday', { time })
-  }
-  if (dueDate.getTime() === tomorrow.getTime()) {
-    return t('dueFriendlyTomorrow', { time })
-  }
-  const date = d.toLocaleDateString(toBcp47Locale(locale), {
-    day: 'numeric',
-    month: 'short',
-    year: d.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-  })
-  return t('dueFriendlyDate', { date, time })
 }
 
 type MissionModalProps = {
@@ -135,7 +78,7 @@ type MissionModalProps = {
   onOpenChange: (open: boolean) => void
   mission: MissionForModal | null
   onSuccess: () => void
-  onCreated?: () => void
+  onCreated?: (mission: MissionForModal) => void
 }
 
 export function MissionModal({
@@ -145,11 +88,9 @@ export function MissionModal({
   onSuccess,
   onCreated,
 }: MissionModalProps) {
-  const locale = useLocale()
   const t = useTranslations('dashboard.overview.missionModal')
   const tMissions = useTranslations('dashboard.overview.missions')
   const isEdit = !!mission
-  const inputLang = locale.startsWith('fr') ? 'fr-FR' : 'en'
 
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState(CATEGORIES[0])
@@ -158,26 +99,17 @@ export function MissionModal({
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(
     'easy'
   )
-  const [dueDateTime, setDueDateTime] = useState('')
   const [repeat, setRepeat] = useState<'NONE' | 'DAILY' | 'WEEKLY'>('NONE')
-  const [editingDue, setEditingDue] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteChoiceOpen, setDeleteChoiceOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const dueDatePart = dueDateTime ? dueDateTime.slice(0, 10) : ''
-  const dueTimePart = dueDateTime ? dueDateTime.slice(11, 16) : ''
-  const setDueFromParts = (date: string, time: string) => {
-    if (date && time) setDueDateTime(`${date}T${time}`)
-  }
 
   useEffect(() => {
     if (!open) return
 
     const timer = setTimeout(() => {
       setError(null)
-      setEditingDue(false)
       if (mission) {
         setTitle(mission.title)
         setCategory(mission.category)
@@ -186,18 +118,13 @@ export function MissionModal({
         setDifficulty(
           mission.xp >= 60 ? 'hard' : mission.xp >= 35 ? 'medium' : 'easy'
         )
-        setDueDateTime(toDateTimeLocal(mission.dueAt))
         setRepeat('NONE')
       } else {
-        const now = new Date()
-        now.setMinutes(0)
-        now.setHours(now.getHours() + 1)
         setTitle('')
         setCategory(CATEGORIES[0])
         setType('HABIT')
         setXp(20)
         setDifficulty('easy')
-        setDueDateTime(toDateTimeLocal(now.toISOString()))
         setRepeat('NONE')
       }
     }, 0)
@@ -210,7 +137,7 @@ export function MissionModal({
     setError(null)
     setSaving(true)
     try {
-      const dueAt = new Date(dueDateTime).toISOString()
+      const tzOffset = getClientTzOffset()
       if (isEdit && mission) {
         const res = await fetch(`/api/missions/${mission.id}`, {
           method: 'PATCH',
@@ -220,7 +147,6 @@ export function MissionModal({
             category: category.trim(),
             type,
             xp: Number(xp),
-            dueAt,
           }),
         })
         if (!res.ok) {
@@ -236,17 +162,22 @@ export function MissionModal({
             category: category.trim(),
             type,
             xp: Number(xp),
-            dueAt,
             repeat,
+            tzOffset,
           }),
         })
         if (!res.ok) {
           const data = await res.json().catch(() => ({}))
           throw new Error(data.error || 'Failed to create')
         }
-        onCreated?.()
+        const created = (await res.json()) as MissionForModal & {
+          createdCount?: number
+        }
+        onCreated?.(created)
       }
-      onSuccess()
+      if (isEdit) {
+        onSuccess()
+      }
       onOpenChange(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -319,7 +250,7 @@ export function MissionModal({
                       setCategory(template.category)
                       setType(template.type)
                       setXp(template.xp)
-                      setRepeat(template.type === 'HABIT' ? 'DAILY' : 'NONE')
+                      setRepeat('NONE')
                       setDifficulty(
                         template.xp >= 60
                           ? 'hard'
@@ -366,13 +297,7 @@ export function MissionModal({
             <Label>{t('typeLabel')}</Label>
             <Select
               value={type}
-              onValueChange={(v) => {
-                const nextType = v as 'HABIT' | 'GOAL'
-                setType(nextType)
-                if (!isEdit) {
-                  setRepeat(nextType === 'HABIT' ? 'DAILY' : 'NONE')
-                }
-              }}
+              onValueChange={(v) => setType(v as 'HABIT' | 'GOAL')}
             >
               <SelectTrigger className="w-full border-white/20 bg-white/10 text-white">
                 <SelectValue />
@@ -430,76 +355,6 @@ export function MissionModal({
             <p className="text-xs text-white/60">
               {t('xpAutoHint', { xp: String(xp) })}
             </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="mission-due">{t('dueLabel')}</Label>
-            {!editingDue && (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-xs text-white/80 transition hover:bg-white/10"
-                  onClick={() => {
-                    const d = new Date()
-                    d.setHours(19, 0, 0, 0)
-                    setDueDateTime(toDateTimeLocal(d.toISOString()))
-                  }}
-                >
-                  {t('duePresetTonight')}
-                </button>
-                <button
-                  type="button"
-                  className="rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-xs text-white/80 transition hover:bg-white/10"
-                  onClick={() => {
-                    const d = new Date()
-                    d.setDate(d.getDate() + 1)
-                    d.setHours(8, 30, 0, 0)
-                    setDueDateTime(toDateTimeLocal(d.toISOString()))
-                  }}
-                >
-                  {t('duePresetTomorrowMorning')}
-                </button>
-              </div>
-            )}
-            {editingDue ? (
-              <div className="flex gap-2">
-                <Input
-                  id="mission-due-date"
-                  type="date"
-                  lang={inputLang}
-                  value={dueDatePart}
-                  onChange={(e) => setDueFromParts(e.target.value, dueTimePart)}
-                  required
-                  className="flex-1 border-white/20 bg-white/10 text-white [color-scheme:dark]"
-                />
-                <Input
-                  id="mission-due-time"
-                  type="time"
-                  lang={inputLang}
-                  value={dueTimePart}
-                  onChange={(e) => setDueFromParts(dueDatePart, e.target.value)}
-                  required
-                  className="w-32 border-white/20 bg-white/10 text-white [color-scheme:dark]"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 text-white/80 hover:bg-white/10 hover:text-white"
-                  onClick={() => setEditingDue(false)}
-                >
-                  {t('dueDone')}
-                </Button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                id="mission-due"
-                className="flex w-full cursor-pointer items-center rounded-md border border-white/20 bg-white/10 px-3 py-2 text-left text-white transition hover:bg-white/15"
-                onClick={() => setEditingDue(true)}
-              >
-                {formatDueFriendly(dueDateTime, locale, t)}
-              </button>
-            )}
           </div>
           {!isEdit && (
             <div className="space-y-2">

@@ -344,6 +344,8 @@
           "overdue": "Overdue",
           "completed": "Completed"
         },
+        "createdOn": "Created {date}",
+        "repeatBadge": "Recurring",
         "type": {
           "habit": "Habit",
           "goal": "Goal"
@@ -760,6 +762,8 @@
     "progress": "{percent}%",
     "next": "Next",
     "skip": "Skip tour",
+    "skipStep": "Next step",
+    "tapHint": "↳ Tap the highlighted area",
     "welcome": {
       "title": "Welcome to Ascent!",
       "body": "Let's take a quick tour and set up your first missions. It only takes a few minutes.",
@@ -771,7 +775,7 @@
     },
     "theme": {
       "title": "Your themes",
-      "body": "Tap here to change the app's look. New themes unlock as you progress."
+      "body": "You can change the app's look here. New themes unlock as you progress."
     },
     "dailyLogin": {
       "title": "Daily reward",
@@ -795,11 +799,15 @@
     },
     "achievementsNav": {
       "title": "Achievements",
-      "body": "The trophy collects your achievements: 15 challenges with 4 tiers each. Unlock them, then claim rewards when the red badge appears."
+      "body": "The trophy opens the achievements page — 15 challenges with 4 tiers each."
     },
     "achievementsPage": {
       "title": "Achievement grid",
-      "body": "Each achievement has bronze, silver, gold, and gem tiers (diamond, ruby, emerald…). Unlocked ones rise to the top — tap one to see progress and claim your loot."
+      "body": "Each achievement has bronze, silver, gold, and gem tiers. Browse the grid, then tap Next."
+    },
+    "achievementsBack": {
+      "title": "Back to dashboard",
+      "body": "Tap Dashboard to return to your missions."
     },
     "habitRepeat": {
       "title": "Daily habits",
@@ -816,6 +824,10 @@
     "missions": {
       "title": "Your daily missions",
       "body": "Every mission you complete moves you forward. Consistency beats perfection — a few actions each day add up fast."
+    },
+    "overdueMission": {
+      "title": "Overdue missions",
+      "body": "Missed a one-off goal? It stays on today’s list with an amber highlight and an “Overdue” label until you complete or delete it."
     },
     "addMission": {
       "title": "Create your first mission",
@@ -850,8 +862,12 @@
       "body": "Your new level is unlocked. Collect your gold — you'll spend it in the shop."
     },
     "chooseTheme": {
+      "title": "Open the theme picker",
+      "body": "You unlocked Light mode! Tap the magic wand to open themes."
+    },
+    "chooseThemeModal": {
       "title": "Try your new theme",
-      "body": "You unlocked Light mode! Open the theme picker and try it out."
+      "body": "Select Light mode (or another unlocked theme), save, then tap Next."
     },
     "done": {
       "title": "You're all set!",

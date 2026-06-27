@@ -1,6 +1,12 @@
 import type { PrismaClient } from '@prisma/client'
 import { randomUUID } from 'crypto'
 
+import type { TzOffsetMinutes } from '@/lib/missions/dates'
+import {
+  getLocalDateKey,
+  localDayBounds,
+  localTodayStart,
+} from '@/lib/missions/dates'
 import {
   DAILY_LOGIN_MISSION_CATEGORY,
   TUTORIAL_MISSION_CATEGORY,
@@ -12,93 +18,51 @@ const SPECIAL_CATEGORIES = [
   TUTORIAL_MISSION_CATEGORY,
 ]
 
-function utcDayStart(date: Date): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
-  )
-}
-
-function utcDayEnd(date: Date): Date {
-  const end = utcDayStart(date)
-  end.setUTCDate(end.getUTCDate() + 1)
-  return end
-}
+const DAY_MS = 24 * 60 * 60 * 1000
 
 export function newRepeatKey(): string {
   return randomUUID()
 }
 
-/** Assign repeatKey to legacy habit series that share title + category. */
-async function backfillRepeatKeys(prisma: PrismaClient, userId: string) {
-  const orphans = await prisma.mission.findMany({
-    where: {
-      userId,
-      type: 'HABIT',
-      repeatKey: null,
-      category: { notIn: SPECIAL_CATEGORIES },
-    },
-    select: { id: true, title: true, category: true },
-  })
-
-  const groups = new Map<string, string[]>()
-  for (const m of orphans) {
-    const key = `${m.title}\0${m.category}`
-    const ids = groups.get(key) ?? []
-    ids.push(m.id)
-    groups.set(key, ids)
-  }
-
-  for (const ids of groups.values()) {
-    if (ids.length < 2) continue
-    const repeatKey = newRepeatKey()
-    await prisma.mission.updateMany({
-      where: { id: { in: ids } },
-      data: { repeatKey },
-    })
-  }
+function localTimeOnDay(
+  dayStart: Date,
+  referenceDueAt: Date,
+  tzOffsetMinutes: TzOffsetMinutes
+): Date {
+  const refBounds = localDayBounds(
+    getLocalDateKey(referenceDueAt, tzOffsetMinutes),
+    tzOffsetMinutes
+  )
+  const timeOffsetMs = referenceDueAt.getTime() - refBounds.start.getTime()
+  return new Date(dayStart.getTime() + timeOffsetMs)
 }
 
-export async function ensureRolledOverOneOffs(
+async function prunePastScheduledRecurring(
   prisma: PrismaClient,
-  userId: string
+  userId: string,
+  todayStart: Date
 ) {
-  const now = new Date()
-  const todayStart = utcDayStart(now)
-
-  const missed = await prisma.mission.findMany({
+  await prisma.mission.deleteMany({
     where: {
       userId,
-      repeatKey: null,
+      repeatKey: { not: null },
       status: 'SCHEDULED',
       dueAt: { lt: todayStart },
       category: { notIn: SPECIAL_CATEGORIES },
     },
-    select: { id: true, dueAt: true },
   })
-
-  for (const mission of missed) {
-    const rolled = new Date(mission.dueAt)
-    rolled.setUTCFullYear(
-      todayStart.getUTCFullYear(),
-      todayStart.getUTCMonth(),
-      todayStart.getUTCDate()
-    )
-    await prisma.mission.update({
-      where: { id: mission.id },
-      data: { dueAt: rolled },
-    })
-  }
 }
 
 export async function ensureRecurringHabits(
   prisma: PrismaClient,
-  userId: string
+  userId: string,
+  tzOffsetMinutes: TzOffsetMinutes
 ) {
-  await backfillRepeatKeys(prisma, userId)
-
   const now = new Date()
-  const horizonEnd = utcDayStart(now)
-  horizonEnd.setUTCDate(horizonEnd.getUTCDate() + HORIZON_DAYS)
+  const todayStart = localTodayStart(tzOffsetMinutes, now)
+  const horizonEnd = new Date(todayStart.getTime() + HORIZON_DAYS * DAY_MS)
+
+  await prunePastScheduledRecurring(prisma, userId, todayStart)
 
   const habits = await prisma.mission.findMany({
     where: {
@@ -124,22 +88,24 @@ export async function ensureRecurringHabits(
       (max, m) => (m.dueAt > max ? m.dueAt : max),
       group[0].dueAt
     )
+
     if (maxDue >= horizonEnd) continue
 
-    const cursor = utcDayStart(maxDue)
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
+    let cursor = todayStart
+    if (maxDue >= todayStart) {
+      const maxDay = localDayBounds(
+        getLocalDateKey(maxDue, tzOffsetMinutes),
+        tzOffsetMinutes
+      )
+      const nextDay = new Date(maxDay.end.getTime())
+      if (nextDay > cursor) cursor = nextDay
+    }
 
     while (cursor <= horizonEnd) {
-      const dayStart = cursor
-      const dayEnd = utcDayEnd(cursor)
-      const exists = group.some((m) => m.dueAt >= dayStart && m.dueAt < dayEnd)
+      const dayEnd = new Date(cursor.getTime() + DAY_MS)
+      const exists = group.some((m) => m.dueAt >= cursor && m.dueAt < dayEnd)
       if (!exists) {
-        const due = new Date(sample.dueAt)
-        due.setUTCFullYear(
-          cursor.getUTCFullYear(),
-          cursor.getUTCMonth(),
-          cursor.getUTCDate()
-        )
+        const due = localTimeOnDay(cursor, sample.dueAt, tzOffsetMinutes)
         const created = await prisma.mission.create({
           data: {
             userId,
@@ -154,7 +120,7 @@ export async function ensureRecurringHabits(
         })
         group.push(created)
       }
-      cursor.setUTCDate(cursor.getUTCDate() + 1)
+      cursor = new Date(cursor.getTime() + DAY_MS)
     }
   }
 }

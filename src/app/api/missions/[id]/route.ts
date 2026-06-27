@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { evaluateAchievements } from '@/lib/achievements/service'
+import { getMissionDoubleOffer } from '@/lib/ads/mission-double'
 import { auth } from '@/lib/auth'
 import { DAILY_QUEST_TARGET } from '@/lib/daily-quest'
 import { applyXpAndLevelOnly, getLevelFromXp } from '@/lib/levels'
@@ -85,11 +86,12 @@ export async function PATCH(
     let newAchievements: Awaited<ReturnType<typeof evaluateAchievements>> = []
     let themeUnlock: { themeId: string } | undefined
     let unlockedThemeIds: string[] = []
+    let adDoubleOffer: Awaited<ReturnType<typeof getMissionDoubleOffer>> = null
 
     if (parsed.data.status === 'COMPLETED') {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { xp: true, level: true, currency: true },
+        select: { xp: true, level: true, currency: true, isPremium: true },
       })
       if (user) {
         const { xp, level, newLevels } = applyXpAndLevelOnly(
@@ -121,6 +123,13 @@ export async function PATCH(
         }
         unlockedThemeIds = themeResult.allNewThemeIds
         updatedUser = { level, xp, currency: user.currency }
+        adDoubleOffer = await getMissionDoubleOffer(
+          prisma,
+          session.user.id,
+          mission.id,
+          effectiveXp,
+          user.isPremium
+        )
       }
     } else if (parsed.data.status === 'SCHEDULED') {
       const user = await prisma.user.findUnique({
@@ -162,6 +171,7 @@ export async function PATCH(
       newAchievements,
       themeUnlock,
       unlockedThemeIds,
+      adDoubleOffer,
     })
   } catch (error) {
     console.error('Mission PATCH error:', error)

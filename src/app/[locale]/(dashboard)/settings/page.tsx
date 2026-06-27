@@ -306,7 +306,7 @@ export default function SettingsPage() {
                   {t('account.reset.description')}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={resetPhrase}
                   onChange={(e) => {
@@ -317,7 +317,7 @@ export default function SettingsPage() {
                     }
                   }}
                   placeholder={t('account.reset.placeholder')}
-                  className="border-red-400/20 bg-black/20 text-white placeholder:text-white/40"
+                  className="min-w-0 border-red-400/20 bg-black/20 text-white placeholder:text-white/40"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') void handleResetAccount()
                   }}
@@ -327,7 +327,7 @@ export default function SettingsPage() {
                   variant="outline"
                   onClick={() => void handleResetAccount()}
                   disabled={resetStatus === 'loading' || !resetPhraseMatches}
-                  className="shrink-0 border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20"
+                  className="w-full shrink-0 border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/20 sm:w-auto"
                 >
                   {resetStatus === 'loading' ? (
                     <RotateCcw className="h-4 w-4 animate-spin" />

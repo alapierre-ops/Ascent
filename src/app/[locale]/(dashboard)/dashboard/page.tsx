@@ -52,8 +52,13 @@ import {
 } from '@/lib/daily-quest'
 import type { CelebrationEvent } from '@/lib/juice/types'
 import { toBcp47Locale } from '@/lib/locale'
+import { getClientTzOffset, getLocalDateKey } from '@/lib/missions/dates'
+import { MISSION_SPECIAL_CATEGORIES } from '@/lib/missions/queries'
 import { DAILY_LOGIN_MISSION_CATEGORY } from '@/lib/missions/special'
-import { TUTORIAL_MISSION_CATEGORY } from '@/lib/onboarding/constants'
+import {
+  ONBOARDING_OVERDUE_MISSION_CATEGORY,
+  TUTORIAL_MISSION_CATEGORY,
+} from '@/lib/onboarding/constants'
 import { ONBOARDING_TUTORIAL_READY_EVENT } from '@/lib/onboarding/events'
 import type { OnboardingAdvanceEvent } from '@/lib/onboarding/steps'
 import type { PendingRewardDto } from '@/lib/pending-rewards'
@@ -79,21 +84,31 @@ const missionIconMap: Record<
   GOAL: Target,
 }
 
-function formatDueLabel(dueAt: string, locale: string): string {
+function formatCreatedLabel(createdAt: string, locale: string): string {
   const bcp47 = toBcp47Locale(locale)
-  const d = new Date(dueAt)
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const dueDate = new Date(d.getFullYear(), d.getMonth(), d.getDate())
-  if (dueDate.getTime() === today.getTime()) {
-    return d.toLocaleTimeString(bcp47, { hour: '2-digit', minute: '2-digit' })
+  return new Date(createdAt).toLocaleDateString(bcp47, {
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+function isCarriedOneOff(
+  mission: MissionForModal,
+  isTodaySelected: boolean,
+  todayStr: string,
+  tzOffset: number
+): boolean {
+  if (!isTodaySelected) return false
+  if (mission.repeatKey) return false
+  if (mission.status !== 'SCHEDULED') return false
+  if (
+    MISSION_SPECIAL_CATEGORIES.includes(
+      mission.category as (typeof MISSION_SPECIAL_CATEGORIES)[number]
+    )
+  ) {
+    return false
   }
-  if (dueDate.getTime() === yesterday.getTime()) {
-    return locale.startsWith('fr') ? 'Hier' : 'Yesterday'
-  }
-  return d.toLocaleDateString(bcp47, { day: 'numeric', month: 'short' })
+  return getLocalDateKey(new Date(mission.dueAt), tzOffset) < todayStr
 }
 
 export default function DashboardPage() {
@@ -176,6 +191,7 @@ export default function DashboardPage() {
   const pendingOnboardingClaim = useRef<OnboardingAdvanceEvent | null>(null)
   const prevDailyQuestPendingRef = useRef(false)
   const themeUnlockFromQueueRef = useRef(false)
+  const missionsFetchGen = useRef(0)
 
   const fetchPendingRewards = useCallback(async () => {
     try {
@@ -198,11 +214,18 @@ export default function DashboardPage() {
   }, [juice])
 
   const fetchMissions = useCallback(
-    async (date?: string) => {
-      setMissionsLoading(true)
+    async (date?: string, options?: { silent?: boolean }) => {
+      const gen = ++missionsFetchGen.current
       const d = date ?? selectedDate
+      if (!options?.silent) {
+        setMissionsLoading(true)
+      }
       try {
-        const res = await fetch(`/api/missions?date=${d}`)
+        const tzOffset = getClientTzOffset()
+        const res = await fetch(
+          `/api/missions?date=${encodeURIComponent(d)}&tzOffset=${tzOffset}`
+        )
+        if (gen !== missionsFetchGen.current) return
         if (res.ok) {
           const data = await res.json()
           setMissions(data)
@@ -210,12 +233,33 @@ export default function DashboardPage() {
           setMissions([])
         }
       } catch {
-        setMissions([])
+        if (gen === missionsFetchGen.current) {
+          setMissions([])
+        }
       } finally {
-        setMissionsLoading(false)
+        if (gen === missionsFetchGen.current && !options?.silent) {
+          setMissionsLoading(false)
+        }
       }
     },
     [selectedDate]
+  )
+
+  const handleMissionCreated = useCallback(
+    (created: MissionForModal) => {
+      const tzOffset = getClientTzOffset()
+      const createdDay = getLocalDateKey(new Date(created.dueAt), tzOffset)
+      if (createdDay === selectedDate) {
+        setMissions((prev) => {
+          if (prev.some((m) => m.id === created.id)) return prev
+          return [...prev, created].sort(
+            (a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime()
+          )
+        })
+      }
+      void fetchMissions(selectedDate, { silent: true })
+    },
+    [fetchMissions, selectedDate]
   )
 
   const claimReward = useCallback(
@@ -363,11 +407,8 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ themeId: id }),
       })
-      if (onboarding?.currentStep?.id === 'choose-theme') {
-        onboarding.signal('theme-picker-opened')
-      }
     },
-    [onboarding, setThemeId]
+    [setThemeId]
   )
 
   const dailyQuestPending = pendingRewards.find((r) => r.type === 'DAILY_QUEST')
@@ -476,16 +517,12 @@ export default function DashboardPage() {
               dedupeKey: `theme-${data.themeUnlock.themeId}`,
             })
           }
-          if (!onboarding?.active && data.effectiveXp > 0 && data.id) {
+          if (!onboarding?.active && data.adDoubleOffer && data.id) {
             const adData = {
               missionId: data.id as string,
-              bonusXp: data.effectiveXp as number,
+              bonusXp: data.adDoubleOffer.bonusXp as number,
             }
-            celebrationEvents.push({
-              type: 'idle_callback',
-              callback: () => setAdPrompt(adData),
-              dedupeKey: `ad-${data.id}`,
-            })
+            juice.whenQueueIdle(() => setAdPrompt(adData))
           }
           if (celebrationEvents.length > 0) {
             juice.enqueueMany(celebrationEvents)
@@ -640,12 +677,12 @@ export default function DashboardPage() {
     fetch('/api/daily/ensure', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ locale }),
+      body: JSON.stringify({ locale, tzOffset: getClientTzOffset() }),
     })
-      .then(() => fetchMissions(todayStr))
+      .then(() => fetchMissions())
       .then(() => fetchPendingRewards())
       .catch(() => {})
-  }, [locale, todayStr, fetchMissions, fetchPendingRewards])
+  }, [locale, fetchMissions, fetchPendingRewards])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -715,11 +752,11 @@ export default function DashboardPage() {
   }, [onboarding?.active, onboarding?.currentStep?.id])
 
   useEffect(() => {
-    juice.setOnboardingActive(onboarding?.active ?? false)
-  }, [onboarding?.active, juice])
-
-  useEffect(() => {
     juice.registerThemeUnlockHandler((themeId) => {
+      if (!getThemeById(themeId)) {
+        juice.notifyThemeUnlockClosed()
+        return
+      }
       themeUnlockFromQueueRef.current = true
       setThemeUnlockId(themeId)
       void refreshTheme()
@@ -744,6 +781,20 @@ export default function DashboardPage() {
       onboarding.signal('day-picker-opened')
     }
   }, [dayPickerOpen, onboarding])
+
+  useEffect(() => {
+    if (themePickerOpen && onboarding?.currentStep?.id === 'choose-theme') {
+      onboarding.signal('theme-picker-opened')
+    }
+  }, [themePickerOpen, onboarding])
+
+  useEffect(() => {
+    if (onboarding?.currentStep?.id !== 'done' || !themePickerOpen) {
+      return
+    }
+    const timer = window.setTimeout(() => setThemePickerOpen(false), 0)
+    return () => window.clearTimeout(timer)
+  }, [onboarding?.currentStep?.id, themePickerOpen])
 
   useEffect(() => {
     const onTutorialReady = () => {
@@ -1244,10 +1295,26 @@ export default function DashboardPage() {
                     isTutorial &&
                     onboarding?.currentStep?.id === 'complete-tutorial' &&
                     !isCompleted
+                  const isOverdueDemo =
+                    mission.category === ONBOARDING_OVERDUE_MISSION_CATEGORY ||
+                    mission.id === onboarding?.overdueMissionId
+                  const isOverdueStep =
+                    isOverdueDemo &&
+                    onboarding?.currentStep?.id === 'overdue-mission' &&
+                    !isCompleted
+                  const tzOffset = getClientTzOffset()
+                  const carried = isCarriedOneOff(
+                    mission,
+                    isTodaySelected,
+                    todayStr,
+                    tzOffset
+                  )
                   const isOverdue =
                     !isCompleted &&
-                    mission.status === 'SCHEDULED' &&
-                    new Date(mission.dueAt) < new Date()
+                    (carried ||
+                      (!!mission.repeatKey &&
+                        mission.status === 'SCHEDULED' &&
+                        new Date(mission.dueAt) < new Date()))
                   return (
                     <div
                       key={mission.id}
@@ -1255,14 +1322,18 @@ export default function DashboardPage() {
                       data-onboarding={
                         isTutorial
                           ? 'tutorial-mission'
-                          : isDailyLogin
-                            ? 'daily-login-mission'
-                            : undefined
+                          : isOverdueDemo
+                            ? 'overdue-mission'
+                            : isDailyLogin
+                              ? 'daily-login-mission'
+                              : undefined
                       }
                       className={cn(
                         'relative flex w-full items-center gap-3 rounded-xl border p-4 transition-all duration-300',
                         isTutorialStep &&
                           'animate-pulse border-indigo-400/70 bg-indigo-500/15 ring-2 ring-indigo-400/60',
+                        isOverdueStep &&
+                          'animate-pulse border-amber-400/70 bg-amber-500/15 ring-2 ring-amber-400/60',
                         isDailyLogin &&
                           dailyLoginPending &&
                           'animate-pulse border-amber-400/70 bg-amber-500/15 ring-2 ring-amber-400/50',
@@ -1275,6 +1346,7 @@ export default function DashboardPage() {
                           '!border-emerald-400/70 bg-emerald-500/35 shadow-[0_0_12px_rgba(16,185,129,0.25)]',
                         !isCompleted &&
                           !isTutorialStep &&
+                          !isOverdueStep &&
                           (isOverdue
                             ? 'border-amber-500/30 bg-amber-500/5'
                             : 'border-white/10 bg-white/[0.06]')
@@ -1391,24 +1463,36 @@ export default function DashboardPage() {
                               !isCompleted && 'text-white/60'
                             )}
                           >
-                            {formatDueLabel(mission.dueAt, locale)}
-                            {isOverdue && !isCompleted && (
-                              <span className="ml-1.5 text-amber-400">
-                                · {tMissions('status.overdue')}
+                            {mission.repeatKey ? (
+                              <span className="text-indigo-300/90">
+                                {tMissions('repeatBadge')}
                               </span>
-                            )}
-                            {isCompleted && (
+                            ) : isOverdue && !isCompleted ? (
+                              <span className="text-amber-400">
+                                {tMissions('status.overdue')}
+                                {carried && mission.createdAt ? (
+                                  <>
+                                    {' · '}
+                                    {tMissions('createdOn', {
+                                      date: formatCreatedLabel(
+                                        mission.createdAt,
+                                        locale
+                                      ),
+                                    })}
+                                  </>
+                                ) : null}
+                              </span>
+                            ) : isCompleted ? (
                               <span
                                 className={cn(
-                                  'ml-1.5',
                                   isDailyLoginClaimed
                                     ? 'text-white/40'
                                     : 'text-emerald-200/90'
                                 )}
                               >
-                                · {tMissions('status.completed')}
+                                {tMissions('status.completed')}
                               </span>
-                            )}
+                            ) : null}
                           </p>
                         </div>
                         <span
@@ -1436,12 +1520,7 @@ export default function DashboardPage() {
 
       <ThemePicker
         open={themePickerOpen}
-        onOpenChange={(open) => {
-          setThemePickerOpen(open)
-          if (open && onboarding?.currentStep?.id === 'choose-theme') {
-            onboarding.signal('theme-picker-opened')
-          }
-        }}
+        onOpenChange={setThemePickerOpen}
         currentThemeId={themeId}
         unlockedThemeIds={unlockedThemeIds}
         onOpen={refreshTheme}
@@ -1475,9 +1554,10 @@ export default function DashboardPage() {
         }}
         mission={missionEditing}
         onSuccess={() => {
-          void fetchMissions()
+          void fetchMissions(selectedDate, { silent: true })
         }}
-        onCreated={() => {
+        onCreated={(created) => {
+          handleMissionCreated(created)
           onboarding?.signal('mission-created')
         }}
       />

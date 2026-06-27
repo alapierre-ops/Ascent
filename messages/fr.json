@@ -344,6 +344,8 @@
           "overdue": "En retard",
           "completed": "Terminé"
         },
+        "createdOn": "Créé le {date}",
+        "repeatBadge": "Récurrente",
         "type": {
           "habit": "Habitude",
           "goal": "Objectif"
@@ -760,6 +762,8 @@
     "progress": "{percent} %",
     "next": "Suivant",
     "skip": "Passer le tutoriel",
+    "skipStep": "Étape suivante",
+    "tapHint": "↳ Appuie sur la zone surlignée",
     "welcome": {
       "title": "Bienvenue sur Ascent !",
       "body": "On va te faire découvrir l'app pas à pas et t'aider à créer tes premières missions. Ça ne prend que quelques minutes.",
@@ -771,7 +775,7 @@
     },
     "theme": {
       "title": "Tes thèmes",
-      "body": "Appuie ici pour changer l'apparence de l'app. De nouveaux thèmes se débloquent en progressant."
+      "body": "Tu pourras changer l'apparence de l'app ici. De nouveaux thèmes se débloquent en progressant."
     },
     "dailyLogin": {
       "title": "Récompense du jour",
@@ -795,11 +799,15 @@
     },
     "achievementsNav": {
       "title": "Succès",
-      "body": "Le trophée rassemble tes succès : 15 défis avec 4 paliers chacun. Débloque-les, puis récupère tes récompenses quand le badge rouge apparaît."
+      "body": "Le trophée ouvre la page des succès : 15 défis avec 4 paliers chacun."
     },
     "achievementsPage": {
       "title": "Grille des succès",
-      "body": "Chaque succès a des paliers bronze, argent, or et gemme (diamant, rubis, émeraude…). Appuie sur un succès pour voir ta progression et récupérer tes gains."
+      "body": "Chaque succès a des paliers bronze, argent, or et gemme. Parcours la grille, puis appuie sur Suivant."
+    },
+    "achievementsBack": {
+      "title": "Retour au tableau de bord",
+      "body": "Appuie sur Tableau de bord pour revenir à tes missions."
     },
     "habitRepeat": {
       "title": "Habitudes quotidiennes",
@@ -816,6 +824,10 @@
     "missions": {
       "title": "Tes missions du jour",
       "body": "Chaque mission cochée te rapproche de tes objectifs. La régularité compte plus que la perfection : quelques actions chaque jour, et ça change tout."
+    },
+    "overdueMission": {
+      "title": "Missions en retard",
+      "body": "Un objectif non terminé à temps reste sur la liste du jour, surligné en ambre avec la mention « En retard », jusqu’à ce que tu le complètes ou le supprimes."
     },
     "addMission": {
       "title": "Crée ta première mission",
@@ -850,8 +862,12 @@
       "body": "Ton nouveau niveau est débloqué. Récupère ton or — tu pourras le dépenser dans la boutique."
     },
     "chooseTheme": {
+      "title": "Ouvre le sélecteur de thèmes",
+      "body": "Tu as débloqué le mode clair ! Appuie sur la baguette magique pour ouvrir les thèmes."
+    },
+    "chooseThemeModal": {
       "title": "Essaie ton nouveau thème",
-      "body": "Tu as débloqué le mode clair ! Ouvre le sélecteur de thèmes et essaie-le."
+      "body": "Sélectionne le mode clair (ou un autre thème débloqué), enregistre, puis appuie sur Suivant."
     },
     "done": {
       "title": "Tu es prêt !",
