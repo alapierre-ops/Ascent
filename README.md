@@ -1,51 +1,38 @@
-# Ascent 🚀
+# Ascent
 
-Turn your self-improvement into a measurable, gamified adventure.
+Gamified habit and goal tracker: XP, streaks, categories, and a simple progression loop.
 
-Ascent is a web application that helps you visualize your personal growth. It transforms habits, learning, and personal goals into a game, allowing you to track your progress, build consistent streaks, and earn XP for your efforts.
+**Live:** https://ascent.axel-lapierre.dev
 
----
+## Features
 
-## 🎯 Features: Level Up Your Life
+- **XP & levels** — Assign XP to goals; completing them raises your level.
+- **Goals & habits** — Deadlines, categories, descriptions; recurring daily/weekly habits.
+- **Streaks** — Current streak, monthly activity calendar, longest streak, consistency rewards.
+- **Gold & shop** — Gold from leveling (shop still WIP).
+- **Auth** — NextAuth with social providers; data stays in your account (PostgreSQL).
 
-Ascent is built around a core loop of setting, tracking, and completing goals.
+## Stack
 
-- **✨ Gamified XP System:** Every goal you create can be assigned an XP (Experience Point) value. Completing the goal banks that XP, contributing to your overall level. Watch your "level" rise as you stick to your commitments.
+| Layer        | Tech                                                                           |
+| ------------ | ------------------------------------------------------------------------------ |
+| App          | Next.js 14 (App Router), React, TypeScript, Tailwind, shadcn/ui, Framer Motion |
+| Auth         | NextAuth.js                                                                    |
+| Data         | PostgreSQL, Prisma, Zod                                                        |
+| Client state | Zustand                                                                        |
+| Hosting      | Vercel (app + API routes)                                                      |
 
-- **🏆 Goal & Habit Tracking:** Create detailed goals with deadlines, categories (e.g., "Fitness," "Learning," "Productivity"), and descriptions. You can also set up recurring daily or weekly habits.
+## Architecture
 
-- **🔥 Streak tracking:** Consistency is key. Ascent helps you track your daily activity: view your current streak, a monthly calendar of active days, longest streak and active-day stats per month, with rewards unlocked for consistency.
+1. Next.js on Vercel serves UI and route handlers.
+2. Handlers check the session, validate with Zod, then talk to Postgres through Prisma.
+3. Auth sessions are managed by NextAuth on the same deploy.
 
-- **🛒 Gold & shop:** Earn gold by leveling up and (in the future) completing challenges. Gold is displayed in the player bar and links to the shop (currently under construction) for future rewards.
+## Getting started
 
-- **🔒 Secure & private:** Built with `NextAuth.js` and a serverless backend, your data is your own. Sign in quickly with social providers (e.g. Google or GitHub) and trust that your goals and progress are stored securely.
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-This project is built with a modern, full-stack, serverless architecture.
-
-| Category            | Technology                                                                                         | Purpose                             |
-| :------------------ | :------------------------------------------------------------------------------------------------- | :---------------------------------- |
-| **Frontend**        | [Next.js 14 (App Router)](https://nextjs.org/)                                                     | SSR, SSG, API Routes                |
-|                     | [React](https://react.dev/) / [TypeScript](https://www.typescriptlang.org/)                        | UI & Type Safety                    |
-|                     | [TailwindCSS](https://tailwindcss.com/)                                                            | Utility-First Styling               |
-| **UI/UX**           | [ShadCN UI](https://ui.shadcn.com/)                                                                | Accessible, Reusable Components     |
-|                     | [Framer Motion](https://www.framer.com/motion/)                                                    | Animations & Transitions            |
-| **Backend**         | [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) | Serverless Backend Logic            |
-| **Authentication**  | [NextAuth.js](https://next-auth.js.org/)                                                           | Authentication & Session Management |
-| **Database**        | [PostgreSQL](https://www.postgresql.org/)                                                          | Relational Database                 |
-| **ORM**             | [Prisma](https://www.prisma.io/)                                                                   | Type-safe Database Access           |
-| **State**           | [Zustand](https://github.com/pmndrs/zustand)                                                       | Minimalist State Management         |
-| **Validation**      | [Zod](https://zod.dev/)                                                                            | Schema Validation                   |
-| **Infra & Hosting** | [Vercel](https://vercel.com/)                                                                      | Frontend Hosting & CI/CD            |
-
-### 🏛️ Architecture
-
-This project uses a modern full-stack architecture:
-
-1.  **Frontend (Vercel):** The Next.js application is hosted on Vercel.
-2.  **Authentication (Vercel):** `NextAuth.js` runs on Vercel, managing user sessions.
-3.  **Backend (Vercel):** Secure **Next.js API Routes** act as the backend. They check the user's session, validate input with `Zod`, and use Prisma to communicate with PostgreSQL.
-4.  **Database:** `PostgreSQL` acts as the persistent data layer, accessed via Prisma ORM.
+```bash
+npm install
+cp .env.example .env   # fill DATABASE_URL, NextAuth secrets, OAuth if used
+npx prisma db push
+npm run dev
+```
