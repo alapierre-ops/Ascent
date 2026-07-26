@@ -6,6 +6,7 @@ declare module 'next-auth' {
     user: {
       id: string
       isPremium: boolean
+      isGuest: boolean
       name?: string | null
       email?: string | null
       image?: string | null
@@ -17,5 +18,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string
     isPremium: boolean
+    isGuest: boolean
+    lastTouch?: number
   }
 }

@@ -1,29 +1,6 @@
-import {
-  type APIRequestContext,
-  type Page,
-  expect,
-  test,
-} from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 
-async function loginAs(
-  page: Page,
-  request: APIRequestContext,
-  baseURL: string | undefined,
-  { email, password }: { email: string; password: string }
-) {
-  await request.post(`${baseURL}/api/auth/register`, {
-    data: { email, password, locale: 'en' },
-  })
-  await page.goto(`${baseURL}/en/login`)
-  await page.locator('#login-email').fill(email)
-  await page.locator('#login-password').fill(password)
-  await page.getByRole('button', { name: /^sign in$/i }).click()
-  await page.waitForURL('**/dashboard', { timeout: 30_000 })
-  await page.request.patch(`${baseURL}/api/user/me`, {
-    data: { onboardingCompleted: true },
-  })
-  await page.reload()
-}
+import { loginAsGuest } from '../helpers/auth'
 
 async function createMission(
   page: Page,
@@ -60,13 +37,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('completing a mission returns status COMPLETED and awards XP', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `complete-xp+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Morning run',
@@ -94,13 +67,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('XP gain is reflected in /api/user/me after completion', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `complete-me+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Read 20 pages',
@@ -125,13 +94,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('un-completing a mission removes its XP', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `uncomplete+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Meditate',
@@ -160,13 +125,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('completing a high-xp mission can trigger a level up', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `levelup+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Epic quest',
@@ -194,13 +155,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('completing 3 missions creates a claimable daily quest reward with gold', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `gold-quest+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       // Complete 3 missions — daily login mission is auto-created but excluded
       // from the daily quest counter, so these 3 are the ones that count
@@ -236,13 +193,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('claiming the daily quest reward increases the gold balance', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `gold-claim+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       for (let i = 0; i < 3; i++) {
         const mission = await createMission(page, baseURL, {
@@ -280,13 +233,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('reaching level 2 creates a claimable level-up reward with gold', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `gold-level+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       // Level 2 requires 50 XP; one mission with xp: 50 is enough
       const mission = await createMission(page, baseURL, {
@@ -326,13 +275,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('claiming a level-up reward increases the gold balance', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `gold-levelclaim+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Level-up claim mission',
@@ -378,13 +323,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('clicking Complete marks the mission as done in the UI', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `ui-complete+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Drink water',
@@ -409,13 +350,9 @@ test.describe('Feature: Mission Completion', () => {
 
     test('un-clicking complete restores the mission to scheduled', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `ui-uncomplete+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const mission = await createMission(page, baseURL, {
         title: 'Journal entry',

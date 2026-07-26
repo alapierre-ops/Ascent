@@ -51,7 +51,7 @@ export function LandingHeader() {
             asChild
             className={cn('px-3 sm:px-4', gradientBtnClass)}
           >
-            <Link href={`/${locale}/login?tab=signup`}>{t('getStarted')}</Link>
+            <Link href={`/${locale}/login`}>{t('getStarted')}</Link>
           </Button>
         </nav>
       </div>

@@ -14,7 +14,6 @@ const PROTECTED_ROUTES = [
   '/achievements',
   '/shop',
 ]
-const AUTH_ONLY_ROUTES = ['reset-password']
 const LOCALES = ['en', 'fr']
 
 export default auth(async function middleware(req) {
@@ -23,9 +22,6 @@ export default auth(async function middleware(req) {
   const locale = pathname.split('/')[1] || 'en'
 
   const isProtected = PROTECTED_ROUTES.some((route) => pathname.includes(route))
-  const isAuthOnlyRoute = AUTH_ONLY_ROUTES.some((route) =>
-    pathname.includes(route)
-  )
   const isLandingPage =
     LOCALES.includes(pathname.split('/')[1]) && pathname.split('/').length === 2
   const isLoginPage = pathname.endsWith('/login')
@@ -38,7 +34,7 @@ export default auth(async function middleware(req) {
     return NextResponse.redirect(loginUrl)
   }
 
-  if ((isLandingPage || isLoginPage || isAuthOnlyRoute) && isAuthenticated) {
+  if ((isLandingPage || isLoginPage) && isAuthenticated) {
     const dashboardUrl = new URL(`/${locale}/dashboard`, req.url)
     return NextResponse.redirect(dashboardUrl)
   }

@@ -1,29 +1,6 @@
-import {
-  type APIRequestContext,
-  type Page,
-  expect,
-  test,
-} from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 
-async function loginAs(
-  page: Page,
-  request: APIRequestContext,
-  baseURL: string | undefined,
-  { email, password }: { email: string; password: string }
-) {
-  await request.post(`${baseURL}/api/auth/register`, {
-    data: { email, password, locale: 'en' },
-  })
-  await page.goto(`${baseURL}/en/login`)
-  await page.locator('#login-email').fill(email)
-  await page.locator('#login-password').fill(password)
-  await page.getByRole('button', { name: /^sign in$/i }).click()
-  await page.waitForURL('**/dashboard', { timeout: 30_000 })
-  await page.request.patch(`${baseURL}/api/user/me`, {
-    data: { onboardingCompleted: true },
-  })
-  await page.reload()
-}
+import { loginAsGuest } from '../helpers/auth'
 
 // Give the user gold by completing a 50xp mission → level 2 → claim 20g reward
 async function acquireGold(
@@ -63,13 +40,9 @@ test.describe('Feature: Shop', () => {
 
     test('GET /api/rewards returns balance, empty rewards and empty history for a new user', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-get+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const res = await page.request.get(`${baseURL}/api/rewards`)
       expect(res.ok()).toBe(true)
@@ -87,13 +60,9 @@ test.describe('Feature: Shop', () => {
 
     test('POST /api/rewards creates a custom reward that appears in the catalog', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-create+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
         data: {
@@ -118,13 +87,9 @@ test.describe('Feature: Shop', () => {
 
     test('PATCH /api/rewards/[id] updates a custom reward', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-edit+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
         data: { title: 'Old title', cost: 100, icon: '🎁', type: 'REAL_LIFE' },
@@ -143,13 +108,9 @@ test.describe('Feature: Shop', () => {
 
     test('DELETE /api/rewards/[id] removes the reward from the catalog', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-del+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
         data: { title: 'Deletable', cost: 10, icon: null, type: 'REAL_LIFE' },
@@ -168,13 +129,9 @@ test.describe('Feature: Shop', () => {
 
     test('DELETE returns HAS_REDEMPTIONS when the reward has been purchased', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-delhas+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       // Create a free reward so it can be redeemed immediately
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
@@ -200,13 +157,9 @@ test.describe('Feature: Shop', () => {
 
     test('redeeming a cost-0 reward succeeds and appears in purchase history', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-free+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
         data: { title: 'Free reward', cost: 0, icon: '🎉', type: 'REAL_LIFE' },
@@ -232,13 +185,9 @@ test.describe('Feature: Shop', () => {
 
     test('redeeming by inline { title, cost } creates and redeems the reward in one call', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-inline+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const redeemRes = await page.request.post(
         `${baseURL}/api/rewards/redeem`,
@@ -264,13 +213,9 @@ test.describe('Feature: Shop', () => {
 
     test('returns INSUFFICIENT_GOLD when balance is too low', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-poor+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       const createRes = await page.request.post(`${baseURL}/api/rewards`, {
         data: {
@@ -293,13 +238,9 @@ test.describe('Feature: Shop', () => {
 
     test('deducts cost from balance and records the purchase in history', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `shop-buy+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       // Acquire 20 gold via level-up reward (50 XP → level 2 → 20g)
       const balanceAfterLevelUp = await acquireGold(page, baseURL)

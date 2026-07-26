@@ -4,150 +4,28 @@ import { useState } from 'react'
 
 import { signIn } from 'next-auth/react'
 import { useLocale, useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import { cn } from '@/lib/utils'
 
 type AuthFormProps = {
-  defaultTab?: 'login' | 'signup'
   primaryBtnClass?: string
   variant?: 'light' | 'dark'
 }
 
-export function AuthForm({
-  defaultTab = 'login',
-  primaryBtnClass,
-  variant = 'dark',
-}: AuthFormProps) {
+export function AuthForm({ primaryBtnClass, variant = 'dark' }: AuthFormProps) {
   const t = useTranslations()
-  const router = useRouter()
   const locale = useLocale()
 
-  const translateZodError = (message: string) => {
-    if (message.includes('Invalid email')) return t('auth.errors.invalidEmail')
-    if (message.includes('at least 6')) return t('auth.errors.passwordTooShort')
-    return t('auth.errors.signupFailed')
-  }
-
-  const [loginEmail, setLoginEmail] = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [signupEmail, setSignupEmail] = useState('')
-  const [signupPassword, setSignupPassword] = useState('')
   const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleGoogleSignIn = async () => {
+  const start = async (provider: 'guest' | 'google') => {
     setError('')
     setIsLoading(true)
     try {
-      await signIn('google', { callbackUrl: `/${locale}/dashboard` })
-    } catch {
-      setError(t('auth.errors.serverError'))
-      setIsLoading(false)
-    }
-  }
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-
-    try {
-      const validateResponse = await fetch('/api/auth/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail }),
-      })
-
-      const validateData = await validateResponse.json()
-
-      if (!validateResponse.ok) {
-        if (validateData.error === 'USE_GOOGLE_SIGNIN') {
-          setError(t('auth.errors.useGoogleSignin'))
-        } else {
-          setError(t('auth.errors.serverError'))
-        }
-        setIsLoading(false)
-        return
-      }
-
-      const result = await signIn('credentials', {
-        email: loginEmail,
-        password: loginPassword,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError(t('auth.errors.invalidCredentials'))
-        setIsLoading(false)
-        return
-      }
-
-      router.push(`/${locale}/dashboard`)
-      router.refresh()
-    } catch {
-      setError(t('auth.errors.serverError'))
-      setIsLoading(false)
-    }
-  }
-
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setSuccessMessage('')
-    setIsLoading(true)
-
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: signupEmail,
-          password: signupPassword,
-          locale,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        const errorMessage =
-          data.error === 'EMAIL_ALREADY_EXISTS'
-            ? t('auth.errors.emailExists')
-            : data.error === 'VALIDATION_ERROR' && data.message
-              ? translateZodError(data.message)
-              : data.error === 'SERVER_ERROR'
-                ? t('auth.errors.serverError')
-                : t('auth.errors.signupFailed')
-        setError(errorMessage)
-        setIsLoading(false)
-        return
-      }
-
-      setSuccessMessage(t('auth.emailSentOnRegister'))
-
-      const result = await signIn('credentials', {
-        email: signupEmail,
-        password: signupPassword,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError(t('auth.errors.loginFailed'))
-        setIsLoading(false)
-        return
-      }
-
-      router.push(`/${locale}/dashboard`)
-      router.refresh()
+      await signIn(provider, { callbackUrl: `/${locale}/dashboard` })
     } catch {
       setError(t('auth.errors.serverError'))
       setIsLoading(false)
@@ -162,140 +40,40 @@ export function AuthForm({
         </div>
       )}
 
-      {successMessage && (
-        <div className="mb-4 rounded-md border border-green-300 bg-green-100 p-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
-          {successMessage}
-        </div>
-      )}
+      <div className="space-y-4">
+        <Button
+          type="button"
+          data-testid="guest-signin"
+          className={cn('w-full cursor-pointer', primaryBtnClass)}
+          size="lg"
+          onClick={() => start('guest')}
+          disabled={isLoading}
+        >
+          {isLoading ? t('auth.loading') : t('auth.tryInstantly')}
+        </Button>
 
-      <Tabs defaultValue={defaultTab} className="w-full">
-        <TabsList
+        <p
           className={cn(
-            'mb-6 grid h-10 w-full grid-cols-2 p-1',
-            variant === 'dark' ? 'bg-white/10' : 'bg-slate-100'
+            'text-center text-xs',
+            variant === 'dark' ? 'text-slate-400' : 'text-slate-500'
           )}
         >
-          <TabsTrigger
-            value="login"
-            className={cn(
-              variant === 'dark'
-                ? 'text-slate-400 data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm'
-                : 'text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm'
-            )}
-          >
-            {t('auth.signIn')}
-          </TabsTrigger>
-          <TabsTrigger
-            value="signup"
-            className={cn(
-              variant === 'dark'
-                ? 'text-slate-400 data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-sm'
-                : 'text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm'
-            )}
-          >
-            {t('auth.signUp')}
-          </TabsTrigger>
-        </TabsList>
+          {t('auth.guestHint')}
+        </p>
 
-        <TabsContent value="login" className="space-y-4">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="login-email">{t('auth.email')}</Label>
-              <Input
-                id="login-email"
-                type="email"
-                placeholder={t('auth.emailPlaceholder')}
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="login-password">{t('auth.password')}</Label>
-                <a
-                  href={`/${locale}/reset-password`}
-                  className={cn(
-                    'text-xs transition-colors hover:underline',
-                    variant === 'dark'
-                      ? 'text-indigo-400 hover:text-indigo-300'
-                      : 'text-indigo-600 hover:text-indigo-800'
-                  )}
-                >
-                  {t('auth.forgotPassword')}
-                </a>
-              </div>
-              <Input
-                id="login-password"
-                type="password"
-                placeholder={t('auth.passwordPlaceholder')}
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button
-              type="submit"
-              className={cn('w-full cursor-pointer', primaryBtnClass)}
-              size="lg"
-              disabled={isLoading}
-            >
-              {isLoading ? t('auth.loading') : t('auth.signIn')}
-            </Button>
-          </form>
+        <AuthDivider label={t('auth.orContinueWith')} variant={variant} />
 
-          <AuthDivider label={t('auth.orContinueWith')} variant={variant} />
-          <GoogleButton
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            label={t('auth.continueWithGoogle')}
-            variant={variant}
-          />
-        </TabsContent>
+        <GoogleButton
+          onClick={() => start('google')}
+          disabled={isLoading}
+          label={t('auth.continueWithGoogle')}
+          variant={variant}
+        />
 
-        <TabsContent value="signup" className="space-y-4">
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="signup-email">{t('auth.email')}</Label>
-              <Input
-                id="signup-email"
-                type="email"
-                placeholder={t('auth.emailPlaceholder')}
-                value={signupEmail}
-                onChange={(e) => setSignupEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="signup-password">{t('auth.password')}</Label>
-              <Input
-                id="signup-password"
-                type="password"
-                placeholder={t('auth.passwordPlaceholder')}
-                value={signupPassword}
-                onChange={(e) => setSignupPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button
-              type="submit"
-              className={cn('w-full cursor-pointer', primaryBtnClass)}
-              size="lg"
-              disabled={isLoading}
-            >
-              {isLoading ? t('auth.loading') : t('auth.createAccount')}
-            </Button>
-          </form>
-
-          <AuthDivider label={t('auth.orContinueWith')} variant={variant} />
-          <GoogleButton
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            label={t('auth.continueWithGoogle')}
-            variant={variant}
-          />
-        </TabsContent>
-      </Tabs>
+        <p className="text-center text-xs text-slate-500">
+          {t('auth.googleHint')}
+        </p>
+      </div>
     </>
   )
 }

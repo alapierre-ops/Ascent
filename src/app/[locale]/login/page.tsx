@@ -3,7 +3,6 @@
 import { Suspense } from 'react'
 
 import { useLocale, useTranslations } from 'next-intl'
-import { useSearchParams } from 'next/navigation'
 
 import { AuthForm } from '@/components/auth/AuthForm'
 import { AscentLogo } from '@/components/landing/AscentLogo'
@@ -21,8 +20,6 @@ import {
 function LoginContent() {
   const t = useTranslations()
   const locale = useLocale()
-  const searchParams = useSearchParams()
-  const tab = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
 
   return (
     <MarketingShell fixedViewport>
@@ -46,11 +43,7 @@ function LoginContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AuthForm
-                defaultTab={tab}
-                primaryBtnClass={gradientBtnClass}
-                variant="dark"
-              />
+              <AuthForm primaryBtnClass={gradientBtnClass} variant="dark" />
             </CardContent>
           </Card>
         </div>

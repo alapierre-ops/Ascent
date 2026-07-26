@@ -75,7 +75,7 @@ export function LandingHero() {
             asChild
             className={cn('h-12 text-base', gradientBtnClass)}
           >
-            <Link href={`/${locale}/login?tab=signup`}>{t('cta')}</Link>
+            <Link href={`/${locale}/login`}>{t('cta')}</Link>
           </Button>
           <Button
             size="lg"

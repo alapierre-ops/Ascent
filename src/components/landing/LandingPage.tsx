@@ -42,7 +42,7 @@ export function LandingPage() {
           <LandingReveal className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center">
             <p className="max-w-md text-sm text-slate-400">{t('tagline')}</p>
             <Button size="lg" asChild className={cn(gradientBtnClass)}>
-              <Link href={`/${locale}/login?tab=signup`}>{t('cta')}</Link>
+              <Link href={`/${locale}/login`}>{t('cta')}</Link>
             </Button>
             <p className="text-xs text-slate-600">{t('copyright')}</p>
           </LandingReveal>

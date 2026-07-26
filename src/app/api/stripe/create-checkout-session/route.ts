@@ -24,6 +24,12 @@ export async function POST() {
       return NextResponse.json({ error: 'Already premium' }, { status: 400 })
     }
 
+    // Un compte invité est temporaire et sans email : rien à quoi rattacher un
+    // achat. Il faut d'abord se connecter avec Google.
+    if (user.isGuest || !user.email) {
+      return NextResponse.json({ error: 'GUEST_ACCOUNT' }, { status: 403 })
+    }
+
     let customerId = user.stripeCustomerId
 
     if (!customerId) {

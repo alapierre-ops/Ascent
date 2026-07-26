@@ -78,9 +78,7 @@ export function LandingPricing() {
                   asChild
                   className={cn('mt-8 h-12', marketingOutlineBtnClass)}
                 >
-                  <Link href={`/${locale}/login?tab=signup`}>
-                    {t('free.cta')}
-                  </Link>
+                  <Link href={`/${locale}/login`}>{t('free.cta')}</Link>
                 </Button>
               </article>
             </InteractiveCard>
@@ -133,9 +131,7 @@ export function LandingPricing() {
                     asChild
                     className={cn('mt-8 h-12', gradientBtnClass)}
                   >
-                    <Link href={`/${locale}/login?tab=signup`}>
-                      {t('premium.cta')}
-                    </Link>
+                    <Link href={`/${locale}/login`}>{t('premium.cta')}</Link>
                   </Button>
                 </article>
               </div>

@@ -1,32 +1,6 @@
-import {
-  type APIRequestContext,
-  type Page,
-  expect,
-  test,
-} from '@playwright/test'
+import { type Page, expect, test } from '@playwright/test'
 
-// Helper: register a user and log in via the UI
-async function loginAs(
-  page: Page,
-  request: APIRequestContext,
-  baseURL: string | undefined,
-  { email, password }: { email: string; password: string }
-) {
-  await request.post(`${baseURL}/api/auth/register`, {
-    data: { email, password, locale: 'en' },
-  })
-  await page.goto(`${baseURL}/en/login`)
-  await page.locator('#login-email').fill(email)
-  await page.locator('#login-password').fill(password)
-  await page.getByRole('button', { name: /^sign in$/i }).click()
-  await page.waitForURL('**/dashboard', { timeout: 30_000 })
-  // New accounts start the onboarding tour, whose overlay blocks clicks
-  // on the dashboard — skip it so tests can interact with the page.
-  await page.request.patch(`${baseURL}/api/user/me`, {
-    data: { onboardingCompleted: true },
-  })
-  await page.reload()
-}
+import { loginAsGuest } from '../helpers/auth'
 
 // Create a mission directly via the API. The starter mission pack
 // (`/api/missions/templates/starter`) is unreliable here: the dashboard's
@@ -88,13 +62,9 @@ test.describe('Feature: Dashboard', () => {
 
     test('shows the level indicator in the player bar', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-level+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       await expect(page.locator('[data-onboarding="level"]')).toBeVisible({
         timeout: 10_000,
@@ -103,13 +73,9 @@ test.describe('Feature: Dashboard', () => {
 
     test('shows the streak count in the player bar', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-streak+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       // A freshly registered user has no completed missions yet
       const streakButton = page.locator('[data-onboarding="streak"]')
@@ -119,24 +85,17 @@ test.describe('Feature: Dashboard', () => {
 
     test("shows the user's gold balance in the player bar", async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-gold+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       await expect(page.locator('[data-onboarding="gold"]')).toBeVisible({
         timeout: 10_000,
       })
     })
 
-    test("shows today's tasks list", async ({ page, request, baseURL }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-tasks+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+    test("shows today's tasks list", async ({ page, baseURL }) => {
+      await loginAsGuest(page, baseURL)
 
       await createMission(page, baseURL, {
         title: 'Hydrate (8 glasses)',
@@ -152,15 +111,8 @@ test.describe('Feature: Dashboard', () => {
       })
     })
 
-    test('shows an XP reward badge on each task', async ({
-      page,
-      request,
-      baseURL,
-    }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-xp+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+    test('shows an XP reward badge on each task', async ({ page, baseURL }) => {
+      await loginAsGuest(page, baseURL)
 
       const hydrate = await createMission(page, baseURL, {
         title: 'Hydrate (8 glasses)',
@@ -178,23 +130,29 @@ test.describe('Feature: Dashboard', () => {
 
     test('marks overdue tasks with a visual indicator', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-overdue+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
-      // Create a goal due earlier today so the dashboard's "today" view
-      // renders it, but the time has already passed (marks it overdue)
-      await createMission(page, baseURL, {
+      // Only an uncompleted one-off carried over from a *previous* day counts
+      // as overdue (see isCarriedOneOff on the dashboard) — a goal due earlier
+      // the same day does not. POST /api/missions ignores the dueAt we send and
+      // always schedules for today, so the mission has to be backdated with a
+      // follow-up PATCH, which does honour dueAt.
+      const stale = await createMission(page, baseURL, {
         title: 'Ship landing page redesign',
         category: 'Productivity',
         type: 'GOAL',
         xp: 150,
-        dueAt: todayAt(1),
+        dueAt: todayAt(12 * 60),
       })
+      const backdate = await page.request.patch(
+        `${baseURL}/api/missions/${stale.id}`,
+        { data: { dueAt: todayAt(-12 * 60) } }
+      )
+      if (!backdate.ok()) {
+        throw new Error(`Failed to backdate mission: ${backdate.status()}`)
+      }
       await page.reload()
 
       await expect(page.getByText('Ship landing page redesign')).toBeVisible({
@@ -209,13 +167,9 @@ test.describe('Feature: Dashboard', () => {
 
     test('opens the levels dialog when clicking the level button', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-levels+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       await page.locator('[data-onboarding="level"]').click()
       await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5_000 })
@@ -223,13 +177,9 @@ test.describe('Feature: Dashboard', () => {
 
     test('avatar picker opens when clicking the avatar', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-avatar+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+      await loginAsGuest(page, baseURL)
 
       // Avatar button has aria-label containing the user's name welcome message
       const avatarBtn = page.locator('button[aria-label]').first()
@@ -242,15 +192,8 @@ test.describe('Feature: Dashboard', () => {
   test.describe('Navigation', () => {
     test.setTimeout(60_000)
 
-    test('gold link navigates to the shop', async ({
-      page,
-      request,
-      baseURL,
-    }) => {
-      await loginAs(page, request, baseURL, {
-        email: `dash-nav+${Date.now()}@example.com`,
-        password: 'password123',
-      })
+    test('gold link navigates to the shop', async ({ page, baseURL }) => {
+      await loginAsGuest(page, baseURL)
 
       await page.locator('[data-onboarding="gold"]').click()
       await expect(page).toHaveURL(/\/shop/, { timeout: 10_000 })

@@ -2,9 +2,12 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Google from 'next-auth/providers/google'
 
-import { verifyPassword } from '@/lib/password'
 import { prisma } from '@/lib/prisma'
 import { ensureDefaultTheme } from '@/lib/themes/service'
+
+// Un compte invité inactif est purgé par le cron ; on rafraîchit lastActiveAt
+// au plus une fois par heure pour éviter une écriture à chaque requête.
+const TOUCH_INTERVAL_MS = 60 * 60 * 1000
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -20,41 +23,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    // Compte démo : un clic, aucune saisie. Le portfolio doit être testable
+    // sans créer de vrais identifiants.
     Credentials({
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+      id: 'guest',
+      name: 'Guest',
+      credentials: {},
+      async authorize() {
+        const user = await prisma.user.create({
+          data: {
+            email: null,
+            isGuest: true,
+            level: 1,
+            xp: 0,
+            currency: 0,
+          },
+          select: { id: true },
         })
 
-        if (!user) {
-          return null
-        }
+        await ensureDefaultTheme(prisma, user.id)
 
-        if (!user.password) {
-          return null
-        }
-
-        const isPasswordValid = await verifyPassword(
-          credentials.password as string,
-          user.password
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-        }
+        return { id: user.id }
       },
     }),
   ],
@@ -64,6 +53,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id!
         const dbUser = await prisma.user.findUnique({ where: { id: user.id! } })
         token.isPremium = dbUser?.isPremium ?? false
+        token.isGuest = dbUser?.isGuest ?? false
+        token.lastTouch = Date.now()
       }
       if (account?.provider === 'google' && profile?.email) {
         let dbUser = await prisma.user.findUnique({
@@ -82,13 +73,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await ensureDefaultTheme(prisma, dbUser.id)
         }
         token.id = dbUser.id
+        token.isGuest = false
       }
+
+      if (
+        token.isGuest &&
+        token.id &&
+        Date.now() - ((token.lastTouch as number) ?? 0) > TOUCH_INTERVAL_MS
+      ) {
+        token.lastTouch = Date.now()
+        // Le compte a pu être purgé entre-temps : ne pas casser la session.
+        await prisma.user
+          .updateMany({
+            where: { id: token.id as string },
+            data: { lastActiveAt: new Date() },
+          })
+          .catch(() => undefined)
+      }
+
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
         session.user.isPremium = token.isPremium as boolean
+        session.user.isGuest = token.isGuest as boolean
       }
       return session
     },

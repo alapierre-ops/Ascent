@@ -1,9 +1,6 @@
-import {
-  type APIRequestContext,
-  type Page,
-  expect,
-  test,
-} from '@playwright/test'
+import { expect, test } from '@playwright/test'
+
+import { loginAsGuest } from '../helpers/auth'
 
 test.describe('Feature: Protected Routes', () => {
   test.describe('Unauthenticated redirects', () => {
@@ -35,48 +32,19 @@ test.describe('Feature: Protected Routes', () => {
   test.describe('Authenticated access', () => {
     test.setTimeout(60_000)
 
-    async function loginAs(
-      page: Page,
-      request: APIRequestContext,
-      baseURL: string | undefined,
-      email: string
-    ) {
-      const password = 'password123'
-      await request.post(`${baseURL}/api/auth/register`, {
-        data: { email, password, name: 'Protected Route User', locale: 'en' },
-      })
-      await page.goto(`${baseURL}/en/login`)
-      await page.locator('#login-email').fill(email)
-      await page.locator('#login-password').fill(password)
-      await page.getByRole('button', { name: /^sign in$/i }).click()
-      await page.waitForURL('**/dashboard', { timeout: 30_000 })
-    }
-
     test('authenticated user can access /en/dashboard', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(
-        page,
-        request,
-        baseURL,
-        `prot-dash+${Date.now()}@example.com`
-      )
+      await loginAsGuest(page, baseURL)
       await expect(page).toHaveURL(/\/dashboard/)
     })
 
     test('authenticated user can navigate to /en/goals', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(
-        page,
-        request,
-        baseURL,
-        `prot-goals+${Date.now()}@example.com`
-      )
+      await loginAsGuest(page, baseURL)
       await page.goto(`${(baseURL as string).replace(/\/$/, '')}/en/goals`)
       await expect(page).toHaveURL(/\/goals/, { timeout: 10_000 })
       await expect(
@@ -86,15 +54,9 @@ test.describe('Feature: Protected Routes', () => {
 
     test('authenticated user can navigate to /en/shop', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(
-        page,
-        request,
-        baseURL,
-        `prot-shop+${Date.now()}@example.com`
-      )
+      await loginAsGuest(page, baseURL)
       await page.goto(`${(baseURL as string).replace(/\/$/, '')}/en/shop`)
       await expect(page).toHaveURL(/\/shop/, { timeout: 10_000 })
       // Shop is under construction — verify something renders
@@ -103,15 +65,9 @@ test.describe('Feature: Protected Routes', () => {
 
     test('authenticated user visiting the auth page is redirected to dashboard', async ({
       page,
-      request,
       baseURL,
     }) => {
-      await loginAs(
-        page,
-        request,
-        baseURL,
-        `prot-auth+${Date.now()}@example.com`
-      )
+      await loginAsGuest(page, baseURL)
       await page.goto(`${baseURL}/en/login`)
       await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 })
     })

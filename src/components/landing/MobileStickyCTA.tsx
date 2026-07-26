@@ -49,7 +49,7 @@ export function MobileStickyCTA() {
           asChild
           className={cn('h-11 w-full', gradientBtnClass)}
         >
-          <Link href={`/${locale}/login?tab=signup`}>{t('cta')}</Link>
+          <Link href={`/${locale}/login`}>{t('cta')}</Link>
         </Button>
       </div>
     </div>

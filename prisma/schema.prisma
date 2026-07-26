@@ -10,15 +10,12 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid()) // Identifiant unique
-  email         String    @unique
-  password          String?
-  resetToken           String?   @unique
-  resetTokenExpiry     DateTime?
-  emailVerified        Boolean   @default(false)
-  verificationToken    String?   @unique
+  email         String?   @unique // Null pour les comptes invités (pas d'email demandé)
+  isGuest       Boolean   @default(false)
   createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now()) // Sert au nettoyage des comptes invités inactifs
   onboardingCompletedAt DateTime?
-  
+
   // --- GAMIFICATION (MVP) ---
   level         Int       @default(1)
   xp            Int       @default(0)      // Expérience actuelle
@@ -40,6 +37,8 @@ model User {
   achievements  UserAchievement[]
   adRewardLogs  AdRewardLog[]
   themeUnlocks  UserThemeUnlock[]
+
+  @@index([isGuest, lastActiveAt]) // Balayage du cron de purge des invités
 }
 
 model UserThemeUnlock {

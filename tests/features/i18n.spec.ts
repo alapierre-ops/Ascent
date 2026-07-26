@@ -19,79 +19,51 @@ test.describe('Feature: Internationalisation (i18n)', () => {
   })
 
   test.describe('English locale (/en)', () => {
-    test('shows "Sign In" in English on the login tab', async ({
+    test('shows the guest call to action in English', async ({
       page,
       baseURL,
     }) => {
       await page.goto(`${baseURL}/en/login`)
-      await expect(page.getByRole('tab', { name: 'Sign In' })).toBeVisible()
+      await expect(page.getByTestId('guest-signin')).toHaveText(
+        /try it instantly/i
+      )
     })
 
-    test('shows "Sign Up" in English on the signup tab', async ({
+    test('shows the Google button in English', async ({ page, baseURL }) => {
+      await page.goto(`${baseURL}/en/login`)
+      await expect(
+        page.getByRole('button', { name: /continue with google/i })
+      ).toBeVisible()
+    })
+
+    test('unauthenticated /en/dashboard redirects to /en/login', async ({
       page,
       baseURL,
     }) => {
-      await page.goto(`${baseURL}/en/login`)
-      await expect(page.getByRole('tab', { name: 'Sign Up' })).toBeVisible()
-    })
-
-    test('shows "Forgot your password?" in English', async ({
-      page,
-      baseURL,
-    }) => {
-      await page.goto(`${baseURL}/en/login`)
-      await expect(page.getByRole('link', { name: /forgot/i })).toBeVisible()
-    })
-
-    test('registration API defaults to English when locale is omitted', async ({
-      request,
-      baseURL,
-    }) => {
-      const email = `en-default+${Date.now()}@example.com`
-      const res = await request.post(`${baseURL}/api/auth/register`, {
-        data: { email, password: 'password123', name: 'English Default' },
-      })
-      expect(res.status()).toBe(200)
+      await page.goto(`${baseURL}/en/dashboard`)
+      await expect(page).toHaveURL(/\/en\/login$/, { timeout: 10_000 })
     })
   })
 
   test.describe('French locale (/fr)', () => {
-    test('shows "Se connecter" on the login tab in French', async ({
+    test('shows the guest call to action in French', async ({
       page,
       baseURL,
     }) => {
       await page.goto(`${baseURL}/fr/login`)
-      // next-intl translation for auth.signIn in French
-      await expect(page.getByRole('tab', { name: /connecter/i })).toBeVisible()
+      await expect(page.getByTestId('guest-signin')).toHaveText(
+        /essayer tout de suite/i
+      )
     })
 
-    test('shows "S\'inscrire" on the signup tab in French', async ({
-      page,
-      baseURL,
-    }) => {
+    test('shows the Google button in French', async ({ page, baseURL }) => {
       await page.goto(`${baseURL}/fr/login`)
-      await expect(page.getByRole('tab', { name: /inscrire/i })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: /continuer avec google/i })
+      ).toBeVisible()
     })
 
-    test('registration with locale=fr returns success', async ({
-      request,
-      baseURL,
-    }) => {
-      const email = `fr+${Date.now()}@example.com`
-      const res = await request.post(`${baseURL}/api/auth/register`, {
-        data: {
-          email,
-          password: 'password123',
-          name: 'Utilisateur Français',
-          locale: 'fr',
-        },
-      })
-      expect(res.status()).toBe(200)
-      const body = await res.json()
-      expect(body.success).toBe(true)
-    })
-
-    test('unauthenticated /fr/dashboard redirects to /fr', async ({
+    test('unauthenticated /fr/dashboard redirects to /fr/login', async ({
       page,
       baseURL,
     }) => {
