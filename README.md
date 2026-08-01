@@ -35,7 +35,7 @@ Two providers, no passwords anywhere:
 - **Guest** — a NextAuth credentials provider that takes no input. Clicking the button creates a `User` row with `isGuest: true` and a null email, then signs the JWT session straight in.
 - **Google** — OAuth, for a persistent account.
 
-Guest accounts are disposable by design, so they're garbage-collected: `/api/cron/cleanup-guests` deletes any guest untouched for `GUEST_RETENTION_DAYS` (default 7) and everything attached to it. Vercel Cron calls it nightly (see `vercel.json`) with `Authorization: Bearer $CRON_SECRET`; the route refuses to run if that secret isn't set. Sessions refresh `lastActiveAt` at most once an hour, so an account in active use is never collected.
+Guest accounts are disposable by design, so they're garbage-collected: `/api/cron/cleanup-guests` deletes any guest untouched for `GUEST_RETENTION_DAYS` (default 7) and everything attached to it. A Netlify scheduled function (`netlify/functions/cleanup-guests.mts`) calls it nightly with `Authorization: Bearer $CRON_SECRET`; the route refuses to run if that secret isn't set. Sessions refresh `lastActiveAt` at most once an hour, so an account in active use is never collected.
 
 ## Getting started
 
