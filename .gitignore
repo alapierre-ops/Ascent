@@ -13,5 +13,10 @@ next-env.d.ts
 
 
 .DS_Store
+.venv-img/
 .idea/
 package-lock.json
+
+screenshots/latest/*.png
+screenshots/latest/manifest.json
+backups/

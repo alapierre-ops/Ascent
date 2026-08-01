@@ -1,0 +1,43 @@
+---
+description: After UI changes, capture and visually review screenshots with Playwright
+globs: src/components/landing/**,src/components/auth/**,src/app/**/page.tsx,src/app/**/layout.tsx
+alwaysApply: false
+---
+
+# Visual UI review (autonomous)
+
+When you change **landing pages, auth UI, or marketing layouts**, verify the result visually — do not rely on code review alone.
+
+## After each meaningful UI change
+
+1. Ensure the app is reachable (or start it):
+   ```bash
+   npm run screenshots -- --serve
+   ```
+   If `npm run dev` is already running:
+   ```bash
+   npm run screenshots
+   ```
+
+2. **Read the generated PNGs** in `screenshots/latest/`:
+   - `landing-mobile.png` — primary check (80% of traffic)
+   - `landing-desktop.png`
+   - `login-mobile.png`, `login-desktop.png`
+
+3. Review against the task:
+   - Vertical centering (no large dead gaps)
+   - Header spacing and logo readability
+   - CTAs visible without horizontal scroll
+   - Text contrast on dark background
+   - Logo/links navigate correctly
+
+4. If something looks wrong, fix the code and **re-run screenshots** before telling the user you're done.
+
+## Optional compare mode
+
+If the user provides a reference design image, read it alongside `screenshots/latest/*.png` and list concrete differences, then fix them.
+
+## Do not
+
+- Skip visual review for "small" CSS tweaks on public pages
+- Commit screenshot PNGs (they are gitignored; `manifest.json` in `latest/` is regenerated each run)
