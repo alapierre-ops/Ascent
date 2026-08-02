@@ -18,6 +18,7 @@ import {
   type OnboardingAdvanceEvent,
   type OnboardingRoute,
 } from '@/lib/onboarding/steps'
+import { fetchUserMe, invalidateUserMeCache } from '@/lib/user/me-client'
 
 type OnboardingContextValue = {
   active: boolean
@@ -71,7 +72,9 @@ export function OnboardingProvider({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ onboardingCompleted: true }),
-    }).catch(() => {})
+    })
+      .then(() => invalidateUserMeCache())
+      .catch(() => {})
   }, [])
 
   const goToNextStep = useCallback(() => {
@@ -122,34 +125,36 @@ export function OnboardingProvider({
     let cancelled = false
 
     async function init() {
-      const meRes = await fetch('/api/user/me')
-      if (!meRes.ok || cancelled) return
-      const me = await meRes.json()
-      if (me.onboardingCompleted || cancelled) {
-        setInitialized(true)
-        return
-      }
-
-      const initRes = await fetch('/api/onboarding/init', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale }),
-      })
-      if (cancelled) return
-      if (initRes.ok) {
-        const data = await initRes.json()
-        if (data.tutorialMissionId) {
-          setTutorialMissionId(data.tutorialMissionId)
-          dispatchOnboardingTutorialReady()
+      try {
+        const me = await fetchUserMe()
+        if (cancelled) return
+        if (!me || me.onboardingCompleted) {
+          setInitialized(true)
+          return
         }
-        if (data.overdueMissionId) {
-          setOverdueMissionId(data.overdueMissionId)
-        }
-      }
 
-      setActive(true)
-      setStepIndex(0)
-      setInitialized(true)
+        const initRes = await fetch('/api/onboarding/init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ locale }),
+        })
+        if (cancelled) return
+        if (initRes.ok) {
+          const data = await initRes.json()
+          if (data.tutorialMissionId) {
+            setTutorialMissionId(data.tutorialMissionId)
+            dispatchOnboardingTutorialReady()
+          }
+          if (data.overdueMissionId) {
+            setOverdueMissionId(data.overdueMissionId)
+          }
+        }
+
+        setActive(true)
+        setStepIndex(0)
+      } finally {
+        if (!cancelled) setInitialized(true)
+      }
     }
 
     void init()

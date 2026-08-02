@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 
 import Link from 'next/link'
 
+import { fetchUserMe } from '@/lib/user/me-client'
+
 function SideAd({ position }: { position: 'left' | 'right' }) {
   return (
     <div
@@ -69,8 +71,7 @@ export function SideAds() {
   const [isPremium, setIsPremium] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch('/api/user/me')
-      .then((res) => (res.ok ? res.json() : null))
+    fetchUserMe()
       .then((data) => setIsPremium(data?.isPremium ?? false))
       .catch(() => setIsPremium(false))
   }, [])
@@ -89,8 +90,7 @@ export function AdBanner() {
   const [isPremium, setIsPremium] = useState<boolean | null>(null)
 
   useEffect(() => {
-    fetch('/api/user/me')
-      .then((res) => (res.ok ? res.json() : null))
+    fetchUserMe()
       .then((data) => setIsPremium(data?.isPremium ?? false))
       .catch(() => setIsPremium(false))
   }, [])

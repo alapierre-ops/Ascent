@@ -63,6 +63,7 @@ import { ONBOARDING_TUTORIAL_READY_EVENT } from '@/lib/onboarding/events'
 import type { OnboardingAdvanceEvent } from '@/lib/onboarding/steps'
 import type { PendingRewardDto } from '@/lib/pending-rewards'
 import { getThemeById } from '@/lib/themes/definitions'
+import { fetchUserMe, invalidateUserMeCache } from '@/lib/user/me-client'
 import { cn } from '@/lib/utils'
 
 import { dashboardData } from '@/data/dashboard'
@@ -388,6 +389,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ themeId: id }),
       })
+      invalidateUserMeCache()
       if (
         onboarding?.currentStep?.id === 'claim-level-modal' &&
         pendingOnboardingClaim.current === 'level-reward-claimed'
@@ -407,6 +409,7 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ themeId: id }),
       })
+      invalidateUserMeCache()
     },
     [setThemeId]
   )
@@ -599,20 +602,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let cancelled = false
-    fetch('/api/user/me')
-      .then((res) => (res.ok ? res.json() : null))
+    fetchUserMe()
       .then((data) => {
-        if (cancelled) return
-        if (data?.level != null)
+        if (cancelled || !data) return
+        if (data.level != null)
           setUserStats({
             level: data.level,
             xp: data.xp ?? 0,
             currency: data.currency ?? 0,
           })
-        if (data?.unlockedThemeIds) {
+        if (data.unlockedThemeIds) {
           setUnlockedThemeIds(data.unlockedThemeIds)
         }
-        if (data?.themeId) {
+        if (data.themeId) {
           setThemeId(data.themeId)
         }
       })
@@ -1576,17 +1578,15 @@ export default function DashboardPage() {
           juice.playXpBonus(bonus)
           setXpBoostToast(`+${bonus} XP ${tMissions('adBonus')}`)
           setTimeout(() => setXpBoostToast(null), 2200)
-          void fetch('/api/user/me')
-            .then((r) => (r.ok ? r.json() : null))
-            .then((d) => {
-              if (d?.level != null) {
-                setUserStats({
-                  level: d.level,
-                  xp: d.xp ?? 0,
-                  currency: d.currency ?? 0,
-                })
-              }
-            })
+          void fetchUserMe({ force: true }).then((d) => {
+            if (d?.level != null) {
+              setUserStats({
+                level: d.level,
+                xp: d.xp ?? 0,
+                currency: d.currency ?? 0,
+              })
+            }
+          })
         }}
       />
 

@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 
+import { fetchUserMe } from '@/lib/user/me-client'
 import { cn } from '@/lib/utils'
 
 import { usePathname, useRouter } from '@/i18n/routing'
@@ -53,8 +54,7 @@ export default function SettingsPage() {
       resetConfirmPhrase.toUpperCase().normalize('NFD').replace(/\p{M}/gu, '')
 
   useEffect(() => {
-    fetch('/api/user/me')
-      .then((res) => (res.ok ? res.json() : null))
+    fetchUserMe()
       .then((data) => {
         if (data?.email) setEmail(data.email)
       })

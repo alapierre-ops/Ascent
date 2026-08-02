@@ -2,97 +2,58 @@
 
 import { useCallback, useEffect, useRef } from 'react'
 
-import useSound from 'use-sound'
-
-import {
-  ALL_SOUND_IDS,
-  SOUND_DEFS,
-  type SoundId,
-  type SoundTier,
-} from '@/lib/juice/sounds'
+import { SOUND_DEFS, type SoundId, type SoundTier } from '@/lib/juice/sounds'
 
 export { readSoundEnabled, writeSoundEnabled } from '@/lib/juice/prefs'
+
+/**
+ * Lazy HTMLAudioElement pool — sounds download on first play instead of
+ * blocking dashboard mount with 11 parallel Howler loads (~300KB WAV).
+ */
+function getAudio(id: SoundId, cache: Map<SoundId, HTMLAudioElement>) {
+  let audio = cache.get(id)
+  if (!audio) {
+    audio = new Audio(SOUND_DEFS[id].src)
+    audio.preload = 'auto'
+    cache.set(id, audio)
+  }
+  return audio
+}
 
 export function useJuiceSounds(
   soundEnabled: boolean,
   onboardingActive: boolean,
   reducedMotion: boolean
 ) {
-  const playFns = useRef<Partial<Record<SoundId, () => void>>>({})
+  const audioCacheRef = useRef<Map<SoundId, HTMLAudioElement>>(new Map())
   const coinDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [playUiClick] = useSound(SOUND_DEFS['ui-click'].src, {
-    volume: SOUND_DEFS['ui-click'].volume,
-    soundEnabled,
-  })
-  const [playMissionPop] = useSound(SOUND_DEFS['mission-pop'].src, {
-    volume: SOUND_DEFS['mission-pop'].volume,
-    soundEnabled,
-  })
-  const [playCoinTick] = useSound(SOUND_DEFS['coin-tick'].src, {
-    volume: SOUND_DEFS['coin-tick'].volume,
-    soundEnabled,
-  })
-  const [playLevelUp] = useSound(SOUND_DEFS['level-up'].src, {
-    volume: SOUND_DEFS['level-up'].volume,
-    soundEnabled,
-  })
-  const [playAchievementUnlock] = useSound(
-    SOUND_DEFS['achievement-unlock'].src,
-    { volume: SOUND_DEFS['achievement-unlock'].volume, soundEnabled }
-  )
-  const [playQuestReady] = useSound(SOUND_DEFS['quest-ready'].src, {
-    volume: SOUND_DEFS['quest-ready'].volume,
-    soundEnabled,
-  })
-  const [playStreakBonus] = useSound(SOUND_DEFS['streak-bonus'].src, {
-    volume: SOUND_DEFS['streak-bonus'].volume,
-    soundEnabled,
-  })
-  const [playRewardClaim] = useSound(SOUND_DEFS['reward-claim'].src, {
-    volume: SOUND_DEFS['reward-claim'].volume,
-    soundEnabled,
-  })
-  const [playThemeUnlock] = useSound(SOUND_DEFS['theme-unlock'].src, {
-    volume: SOUND_DEFS['theme-unlock'].volume,
-    soundEnabled,
-  })
-  const [playShopRedeem] = useSound(SOUND_DEFS['shop-redeem'].src, {
-    volume: SOUND_DEFS['shop-redeem'].volume,
-    soundEnabled,
-  })
-  const [playXpBonus] = useSound(SOUND_DEFS['xp-bonus'].src, {
-    volume: SOUND_DEFS['xp-bonus'].volume,
-    soundEnabled,
-  })
-
   useEffect(() => {
-    playFns.current = {
-      'ui-click': playUiClick,
-      'mission-pop': playMissionPop,
-      'coin-tick': playCoinTick,
-      'level-up': playLevelUp,
-      'achievement-unlock': playAchievementUnlock,
-      'quest-ready': playQuestReady,
-      'streak-bonus': playStreakBonus,
-      'reward-claim': playRewardClaim,
-      'theme-unlock': playThemeUnlock,
-      'shop-redeem': playShopRedeem,
-      'xp-bonus': playXpBonus,
+    return () => {
+      if (coinDebounceRef.current) clearTimeout(coinDebounceRef.current)
+      for (const audio of audioCacheRef.current.values()) {
+        audio.pause()
+        audio.src = ''
+      }
+      audioCacheRef.current.clear()
     }
-  }, [
-    playUiClick,
-    playMissionPop,
-    playCoinTick,
-    playLevelUp,
-    playAchievementUnlock,
-    playQuestReady,
-    playStreakBonus,
-    playRewardClaim,
-    playThemeUnlock,
-    playShopRedeem,
-    playXpBonus,
-  ])
+  }, [])
+
+  // Warm a couple of frequent sounds during idle time (non-blocking).
+  useEffect(() => {
+    if (!soundEnabled || typeof window === 'undefined') return
+    const warm = () => {
+      getAudio('ui-click', audioCacheRef.current)
+      getAudio('mission-pop', audioCacheRef.current)
+    }
+    const ric = window.requestIdleCallback?.bind(window)
+    if (ric) {
+      const id = ric(warm, { timeout: 2500 })
+      return () => window.cancelIdleCallback?.(id)
+    }
+    const timer = window.setTimeout(warm, 1200)
+    return () => window.clearTimeout(timer)
+  }, [soundEnabled])
 
   const shouldPlayTier = useCallback(
     (tier: SoundTier) => {
@@ -106,9 +67,16 @@ export function useJuiceSounds(
 
   const playSound = useCallback(
     (id: SoundId) => {
-      const tier = SOUND_DEFS[id].tier
-      if (!shouldPlayTier(tier)) return
-      playFns.current[id]?.()
+      const def = SOUND_DEFS[id]
+      if (!shouldPlayTier(def.tier)) return
+      try {
+        const audio = getAudio(id, audioCacheRef.current)
+        audio.volume = def.volume
+        audio.currentTime = 0
+        void audio.play().catch(() => {})
+      } catch {
+        // Autoplay / missing asset — ignore
+      }
     },
     [shouldPlayTier]
   )
@@ -117,9 +85,9 @@ export function useJuiceSounds(
     if (!shouldPlayTier('subtle')) return
     if (coinDebounceRef.current) clearTimeout(coinDebounceRef.current)
     coinDebounceRef.current = setTimeout(() => {
-      playFns.current['coin-tick']?.()
+      playSound('coin-tick')
     }, 150)
-  }, [shouldPlayTier])
+  }, [shouldPlayTier, playSound])
 
   const vibrate = useCallback((ms = 10) => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -134,6 +102,5 @@ export function useJuiceSounds(
     playCoinTickDebounced,
     vibrate,
     confettiIntensity,
-    preloadIds: ALL_SOUND_IDS,
   }
 }

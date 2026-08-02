@@ -11,6 +11,7 @@ import {
 } from 'react'
 
 import { DEFAULT_THEME_ID } from '@/lib/themes/definitions'
+import { fetchUserMe } from '@/lib/user/me-client'
 
 type ThemeContextValue = {
   themeId: string
@@ -32,9 +33,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const refreshTheme = useCallback(async () => {
     try {
-      const res = await fetch('/api/user/me')
-      if (!res.ok) return
-      const data = await res.json()
+      const data = await fetchUserMe({ force: true })
+      if (!data) return
       if (typeof data.themeId === 'string') {
         setThemeIdState(data.themeId)
       }
@@ -53,10 +53,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     ;(async () => {
       try {
-        const res = await fetch('/api/user/me')
-        if (!res.ok || cancelled) return
-        const data = await res.json()
-        if (cancelled) return
+        const data = await fetchUserMe()
+        if (!data || cancelled) return
         if (typeof data.themeId === 'string') {
           setThemeIdState(data.themeId)
         }

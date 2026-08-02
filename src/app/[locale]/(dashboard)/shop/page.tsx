@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 
+import { fetchUserMe } from '@/lib/user/me-client'
+
 import { SHOP_EXAMPLE_REWARDS } from '@/data/shop'
 
 const SPONSOR_INSERT_INDEX = 6
@@ -93,8 +95,7 @@ export default function ShopPage() {
 
   useEffect(() => {
     loadRewardsData()
-    fetch('/api/user/me')
-      .then((res) => (res.ok ? res.json() : null))
+    fetchUserMe()
       .then((data) => {
         if (data) setIsPremium(data.isPremium ?? false)
       })
